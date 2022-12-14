@@ -8,6 +8,7 @@ from cryptography.fernet import Fernet
 import win32api
 import win32con
 import math
+import time
 
 # Monitors resolution
 WIDTH = win32api.GetSystemMetrics(0)
@@ -22,41 +23,28 @@ class remoteDesktop:
 	def __init__(self, ip: str = "192.168.1.10", port: int = 443):
 		self.ip = ip
 		self.port = port
-		#self.enc = fernet(key)
+		self.socket = None
+		# self.enc = fernet(key)
+
+	def startsession(self) -> None:
+		print("started!")
 		while True:
 			try:
-				remoteDesktop.showscreen(self,remoteDesktop.imagebytes(self))
+				remoteDesktop.sendall(self)
 			except:
 				break
-
-
 	def connect(self) -> None:
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect(self.ip, self.port)
-	
-	def sendall(self, sock) -> None:
-		pass
-	# Server
-	def showcords(self, event, x, y, flags, params) -> int:
-		xRatio = WIDTH / SWIDTH
-		yRatio = HEIGHT / SHEIGHT
-		print(event, math.ceil(x*xRatio), math.ceil(y*yRatio), flags)
-		win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
-		return event, math.ceil(x*xRatio), math.ceil(y*yRatio)
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((self.ip, self.port))
+		self.socket.recv(1028)
+		self.startsession()
+		
+	def sendall(self) -> None:
+		self.socket.send(self.imagebytes())
 
-	# Server
-	def showscreen(self, img) -> None:
-		'''Decompresses and displays on screen'''
-		decompress = zlib.decompress(img)
-		nparr = np.frombuffer(decompress, np.uint8)
-		frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-		frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
-		cv2.imshow('frame', frame)
-		cv2.setMouseCallback("frame", self.showcords)
-		cv2.waitKey(1)
 
 	def imagebytes(self) -> bytes:
-		'''Grabs screenshot in JPEG and compresses the bytes'''
+		''' Grabs screenshot in JPEG and compresses the bytes '''
 		buffer = io.BytesIO()
 		im = ImageGrab.grab()
 		im.save(buffer, format="JPEG")
@@ -64,5 +52,15 @@ class remoteDesktop:
 		compressed = zlib.compress(value)
 		return compressed
 
+
+def main(limit: int = 5) -> None:
+	desktop = remoteDesktop()
+	while True:
+		try:
+			desktop.connect()
+		except Exception:
+			time.sleep(limit)
+			break
 if __name__ == '__main__':
-	remoteDesktop()
+	while True:
+		main()
