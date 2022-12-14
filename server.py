@@ -25,13 +25,11 @@ class servercontrol:
         self.socket = None
         self.connect()
 
-    def recvdata(self):
-        BUFF_SIZE = 4096
-        data = b''
+    def recvdata(self, buffer: int=4096, data: bytes=b''):
         while True:
-            part = self.socket.recv(BUFF_SIZE)
+            part = self.socket.recv(buffer)
             data += part
-            if len(part) < BUFF_SIZE:
+            if len(part) < buffer:
                 break
         return data
 
@@ -39,9 +37,12 @@ class servercontrol:
     def showcords(self, event, x, y, flags, params) -> int:
         xRatio = WIDTH / SWIDTH
         yRatio = HEIGHT / SHEIGHT
-        print(event, math.ceil(x*xRatio), math.ceil(y*yRatio), flags)
+        x = str(math.ceil(x*xRatio))
+        y = str(math.ceil(y*yRatio))
+        self.socket.send(bytes(x + y, "utf-8"))
+        # print(event, math.ceil(x*xRatio), math.ceil(y*yRatio), flags)
         win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
-        return event, math.ceil(x*xRatio), math.ceil(y*yRatio)
+        return event
 
     # Server
     def showscreen(self, img) -> None:
