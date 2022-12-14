@@ -14,7 +14,7 @@ WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 # 1920x1080 FOR MY SCREENs
 
-# Software resolution
+# Softwares resolution
 SWIDTH = 960
 SHEIGHT = 540
 
@@ -33,18 +33,15 @@ class servercontrol:
                 break
         return data
 
-    # Server
     def showcords(self, event, x, y, flags, params) -> int:
         xRatio = WIDTH / SWIDTH
         yRatio = HEIGHT / SHEIGHT
         x = str(math.ceil(x*xRatio))
         y = str(math.ceil(y*yRatio))
         self.socket.send(bytes(x + y, "utf-8"))
-        # print(event, math.ceil(x*xRatio), math.ceil(y*yRatio), flags)
         win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
         return event
 
-    # Server
     def showscreen(self, img) -> None:
         ''' Decompresses and displays on screen '''
         decompress = zlib.decompress(img)
