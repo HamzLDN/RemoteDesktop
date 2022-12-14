@@ -1,24 +1,17 @@
-from PIL import ImageGrab, Image
+from PIL import ImageGrab
 import io
 import zlib
 import socket
-import cv2
-import numpy as np
-from cryptography.fernet import Fernet
 import win32api
-import win32con
-import math
 import time
 
 # Monitors resolution
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
-# 1920x1080 FOR MY SCREENs
 
 # Software resolution
 SWIDTH = 960
 SHEIGHT = 540
-# 960x540
 class remoteDesktop:
 	def __init__(self, ip: str = "192.168.1.10", port: int = 443):
 		self.ip = ip
@@ -50,6 +43,8 @@ class remoteDesktop:
 		im.save(buffer, format="JPEG")
 		value = buffer.getvalue()
 		compressed = zlib.compress(value)
+		# if self.socket.recv(4) != "":
+		# 	print(self.socket.recv(4))
 		return compressed
 
 
