@@ -42,10 +42,10 @@ class remoteDesktop:
 		im = ImageGrab.grab()
 		im.save(buffer, format="JPEG")
 		value = buffer.getvalue()
-		compressed = zlib.compress(value)
+		# compressed = zlib.compress(value)
 		# if self.socket.recv(4) != "":
 		# 	print(self.socket.recv(4))
-		return compressed
+		return value
 
 
 def main(limit: int = 5) -> None:
