@@ -8,6 +8,7 @@ import math
 # Monitors resolution
 # WIDTH = win32api.GetSystemMetrics(0)
 # HEIGHT = win32api.GetSystemMetrics(1)
+
 # 1920x1080 FOR MY SCREENs
 WIDTH = 1920
 HEIGHT = 1080
