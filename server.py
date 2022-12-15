@@ -2,16 +2,14 @@ import zlib
 import socket
 import cv2
 import numpy as np
-# import win32api
-# import win32con
+import win32api
+import win32con
 import math
 # Monitors resolution
-# WIDTH = win32api.GetSystemMetrics(0)
-# HEIGHT = win32api.GetSystemMetrics(1)
-
+WIDTH = win32api.GetSystemMetrics(0)
+HEIGHT = win32api.GetSystemMetrics(1)
 # 1920x1080 FOR MY SCREENs
-WIDTH = 1920
-HEIGHT = 1080
+
 # Softwares resolution
 SWIDTH = 960
 SHEIGHT = 540
@@ -37,13 +35,13 @@ class servercontrol:
         x = str(math.ceil(x*xRatio))
         y = str(math.ceil(y*yRatio))
         self.socket.send(bytes(x + y, "utf-8"))
-        # win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
+        win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
         return event
 
     def showscreen(self, img) -> None:
         ''' Decompresses and displays on screen '''
-        decompress = zlib.decompress(img)
-        nparr = np.frombuffer(decompress, np.uint8)
+        # decompress = zlib.decompress(img)
+        nparr = np.frombuffer(img, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
         cv2.imshow('frame', frame)
