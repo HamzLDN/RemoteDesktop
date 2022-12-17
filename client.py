@@ -33,20 +33,20 @@ class RemoteDesktop:
                     mouse = Controller()
                     datatype, xAxis, yAxis, event = data[0], int(data[1]), int(data[2]), int(data[3])
                     print(datatype, xAxis, yAxis, event)
-                    # if xAxis < 0 and yAxis < 0:
-                    #     pass
-                    # else:
-                    #     mouse.position = (xAxis,yAxis)
-                    #     if event == 1:
-                    #         mouse.press(Button.left)
-                    #     if event == 4:
-                    #         mouse.release(Button.left)
-                    #     if event == 2:
-                    #         mouse.press(Button.right)
-                    #     if event == 5:
-                    #         mouse.release(Button.right)
-                    #     if event == 7:
-                    #         pyautogui.doubleClick(xAxis,yAxis)
+                    if xAxis < 0 and yAxis < 0:
+                        pass
+                    else:
+                        mouse.position = (xAxis,yAxis)
+                        if event == 1:
+                            mouse.press(Button.left)
+                        if event == 4:
+                            mouse.release(Button.left)
+                        if event == 2:
+                            mouse.press(Button.right)
+                        if event == 5:
+                            mouse.release(Button.right)
+                        if event == 7:
+                            pyautogui.doubleClick(xAxis,yAxis)
                 if data[0] == "keyboard":
                     keys = int(data[1])
                     if keys == 13:
