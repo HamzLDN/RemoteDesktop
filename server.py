@@ -179,3 +179,4 @@ class StreamingServer:
 if __name__ == '__main__':
     server = StreamingServer('0.0.0.0', 443)
     server.start_server()
+    print("hello")
