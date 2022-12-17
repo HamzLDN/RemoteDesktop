@@ -108,5 +108,5 @@ class Control(RemoteDesktop):
         return frame
 
 if __name__ == '__main__':
-    remote = Control('51.195.187.145', 443)
+    remote = Control('IPADDRESS', 443)
     remote.start_stream()
