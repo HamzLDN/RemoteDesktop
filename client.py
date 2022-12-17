@@ -18,8 +18,6 @@ class RemoteDesktop:
         
     def _get_frame(self):
         return None
-        
-
     
     def recv_msg(self):
         msg = self.socket.recv(1028).decode()
@@ -61,12 +59,12 @@ class RemoteDesktop:
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
         while self.active:
-            frame = self._get_frame()
+            frame = None
             _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
             video = pickle.dumps(frame, 0)
             length = len(video)
             try:
-                self.socket.send(zlib.compress(struct.pack('>L', length) + video))
+                self.socket.send(struct.pack('>L', length) + video)
             except ConnectionResetError:
                 self.active = False
             except ConnectionAbortedError:
@@ -77,9 +75,9 @@ class RemoteDesktop:
 
         cv2.destroyAllWindows()
 
-    def start_stream(self):
+    def connect(self):
         if self.active:
-            print("Client is already streaming!")
+            print("Client already up and running")
         else:
             self.active = True
             client_thread = threading.Thread(target=self.__client_streaming)
@@ -92,7 +90,7 @@ class RemoteDesktop:
         if self.active:
             self.active = False
         else:
-            print("Client not streaming!")
+            print("Client is not active!")
 
 class Control(RemoteDesktop):
     def __init__(self, host, port, x_res=1024, y_res=576):
@@ -108,5 +106,5 @@ class Control(RemoteDesktop):
         return frame
 
 if __name__ == '__main__':
-    remote = Control('IPADDRESS', 443)
-    remote.start_stream()
+    remote = Control(IP ADDRESS, 443)
+    remote.connect()
