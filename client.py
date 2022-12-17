@@ -6,86 +6,91 @@ import socket
 import pickle
 import struct
 import threading
-
-
+from pynput.mouse import Button, Controller
+import base64
+import zlib
 class RemoteDesktop:
     def __init__(self, host, port):
         self.ip = host
         self.port = port
-        self._configure()
-        self.__running = False
+        self.active = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    def _configure(self):
-        """
-        Basic configuration function.
-        """
-        self.__encoding_parameters = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-
+        
     def _get_frame(self):
         return None
-
-    def _cleanup(self):
-        """
-        Cleans up resources and closes everything.
-        """
-        cv2.destroyAllWindows()
+        
 
     
     def recv_msg(self):
-        msg = self.socket.recv(16).decode()
+        msg = self.socket.recv(1028).decode()
         return msg
     
-    def _servermouse(self):
-        while True:
+    def __servermouse(self):
+        while self.active:
             try:
-                data = self.recv_msg().split(" ")
-                event, xAxis, yAxis = data[0], data[1], data[2]
-                print(event, xAxis, yAxis)
-                if event == "1":
-                    pyautogui.mouseDown(button='left', x=int(xAxis), y=int(yAxis))
-                if event == "4":
-                    pyautogui.mouseUp(button='left', x=int(xAxis), y=int(yAxis))
+                data = self.recv_msg().split(":")
+                if data[0] == "mouse":
+                    mouse = Controller()
+                    datatype, xAxis, yAxis, event = data[0], int(data[1]), int(data[2]), int(data[3])
+                    print(datatype, xAxis, yAxis, event)
+                    # if xAxis < 0 and yAxis < 0:
+                    #     pass
+                    # else:
+                    #     mouse.position = (xAxis,yAxis)
+                    #     if event == 1:
+                    #         mouse.press(Button.left)
+                    #     if event == 4:
+                    #         mouse.release(Button.left)
+                    #     if event == 2:
+                    #         mouse.press(Button.right)
+                    #     if event == 5:
+                    #         mouse.release(Button.right)
+                    #     if event == 7:
+                    #         pyautogui.doubleClick(xAxis,yAxis)
+                if data[0] == "keyboard":
+                    keys = int(data[1])
+                    if keys == 13:
+                        pyautogui.press("enter")
+                    else:
+                        pyautogui.press(chr(keys))
+                        print("keyboard", chr(keys))
+                else:
+                    pass
             except:
                 pass
     def __client_streaming(self):
-        """
-        Main method for streaming the client data.
-        """
         self.socket.connect((self.ip, self.port))
-        while self.__running:
+        while self.active:
             frame = self._get_frame()
-            _, frame = cv2.imencode('.jpg', frame, self.__encoding_parameters)
-            data = pickle.dumps(frame, 0)
-            size = len(data)
+            _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            video = pickle.dumps(frame, 0)
+            length = len(video)
             try:
-                self.socket.sendall(struct.pack('>L', size) + data)
+                self.socket.send(zlib.compress(struct.pack('>L', length) + video))
             except ConnectionResetError:
-                self.__running = False
+                self.active = False
             except ConnectionAbortedError:
-                self.__running = False
+                self.active = False
             except BrokenPipeError:
-                self.__running = False
-
-        self._cleanup()
-
-    def start_stream(self):
-        if self.__running:
-            print("Client is already streaming!")
-        else:
-            self.__running = True
-            client_thread = threading.Thread(target=self.__client_streaming)
-            client_thread.start()
-            mouse = threading.Thread(target=self._servermouse())
-            mouse.start()
+                self.active = False
             
 
+        cv2.destroyAllWindows()
 
+    def start_stream(self):
+        if self.active:
+            print("Client is already streaming!")
+        else:
+            self.active = True
+            client_thread = threading.Thread(target=self.__client_streaming)
+            client_thread.start()
+            controller = threading.Thread(target=self.__servermouse)
+            controller.start()
+
+            
     def stop_stream(self):
-        """
-        Stops client stream if running
-        """
-        if self.__running:
-            self.__running = False
+        if self.active:
+            self.active = False
         else:
             print("Client not streaming!")
 
@@ -97,9 +102,11 @@ class Control(RemoteDesktop):
 
     def _get_frame(self):
         screen = ImageGrab.grab()
+        # screen = pyautogui.screenshot()
         frame = np.array(screen)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
+
 if __name__ == '__main__':
-    remote = Control('localhost', 443)
+    remote = Control('51.195.187.145', 443)
     remote.start_stream()
