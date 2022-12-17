@@ -7,7 +7,7 @@ import threading
 import win32api
 import win32con
 import math
-import base64
+import zlib
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 # 1920x1080 FOR MY SCREENs
@@ -15,13 +15,16 @@ HEIGHT = win32api.GetSystemMetrics(1)
 # Softwares resolution
 SWIDTH = 960
 SHEIGHT = 540
+
+
 class StreamingServer:
-    def __init__(self, host, port, slots=8, quit_key='q'):
+    def __init__(self, host, port, slots=8):
         self.__host = host
         self.__port = port
         self.__slots = slots
         self.__used_slots = 0
         self.__running = False
+        self.__Active = False
         self.__block = threading.Lock()
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__init_socket()
@@ -42,7 +45,8 @@ class StreamingServer:
             self.__running = True
             server_thread = threading.Thread(target=self.__server_listening)
             server_thread.start()
-
+            # keyboard = threading.Thread(target=self.keyboard)
+            # keyboard.start()
     def __server_listening(self):
         """
         Listens for new connections.
@@ -62,6 +66,7 @@ class StreamingServer:
             self.__block.release()
             thread = threading.Thread(target=self.__client_connection, args=(connection, address,))
             thread.start()
+
             print("Connection started!")
 
     def stop_server(self):
@@ -88,9 +93,32 @@ class StreamingServer:
         else:
             print("Server not running!")
             
+    # def send_msg(self, msg, conn):
+    #     print(msg)
+    #     conn.send(msg)
+
     def send_msg(self, msg):
-        connection.send(msg)
+        print(msg)
+        try:
+            connection.send(msg)
+        except:
+            print("No connection")
         
+    # def showcords(self, event,x,y,flags,params) -> None:
+    #     global mouse
+    #     import time
+    #     self.__Active = True
+    #     win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
+    #     xRatio = WIDTH / SWIDTH
+    #     yRatio = HEIGHT / SHEIGHT
+    #     x = str(math.ceil(x*xRatio))
+    #     y = str(math.ceil(y*yRatio))
+    #     event = str(event)
+    #     data = ["mouse", x, y, event]
+    #     mouse = ":".join(data)
+    #     time.sleep(0.1)
+    #     print(mouse)
+
     def showcords(self, event,x,y,flags,params) -> None:
         win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
         xRatio = WIDTH / SWIDTH
@@ -98,14 +126,11 @@ class StreamingServer:
         x = str(math.ceil(x*xRatio))
         y = str(math.ceil(y*yRatio))
         event = str(event)
-        data = [x, y, event]
+        data = ["mouse", x, y, event]
         keys = ":".join(data)
         self.send_msg(keys.encode('utf-8'))
-
+        
     def __client_connection(self, connection, address):
-        """
-        Handles the individual client connections and processes their stream data.
-        """
         payload_size = struct.calcsize('>L')
         data = b""
 
@@ -129,7 +154,6 @@ class StreamingServer:
 
             while len(data) < msg_size:
                 data += connection.recv(4096)
-
             frame_data = data[:msg_size]
             data = data[msg_size:]
 
@@ -139,6 +163,15 @@ class StreamingServer:
             cv2.imshow(str(address), frame)
             cv2.setMouseCallback(str(address), self.showcords)
             cv2.waitKey(1)
+            # if self.__Active:
+            #     print("Active")
+            #     self.send_msg(mouse.encode('utf-8'), connection)
+            # self.__Active = False
+            keyboard = "keyboard:" + str(cv2.waitKey(300)) 
+            # if keyboard.split(":")[1] == "-1":
+            #     continue
+            # else:
+            self.send_msg(keyboard.encode('utf-8'))
             # if cv2.waitKey(1) == ord(self.__quit_key):
             #     connection.close()
             #     self.__used_slots -= 1
