@@ -7,7 +7,7 @@ import threading
 import win32api
 import win32con
 import math
-
+import base64
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 # 1920x1080 FOR MY SCREENs
@@ -62,7 +62,6 @@ class StreamingServer:
             self.__block.release()
             thread = threading.Thread(target=self.__client_connection, args=(connection, address,))
             thread.start()
-
             print("Connection started!")
 
     def stop_server(self):
@@ -81,18 +80,27 @@ class StreamingServer:
             print("Server not running!")
             
             
+    def restart_server(self):
+        if self.__running:
+            self.__running = False
+            self.stop_server()
+            self.start_server()
+        else:
+            print("Server not running!")
+            
     def send_msg(self, msg):
         connection.send(msg)
         
-    def showcords(self, event,x,y,flags,param) -> None:
+    def showcords(self, event,x,y,flags,params) -> None:
+        win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
         xRatio = WIDTH / SWIDTH
         yRatio = HEIGHT / SHEIGHT
         x = str(math.ceil(x*xRatio))
         y = str(math.ceil(y*yRatio))
         event = str(event)
-        data = event + " " + x + " " + y
-        self.send_msg(data.encode('utf-8'))
-        win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
+        data = [x, y, event]
+        keys = ":".join(data)
+        self.send_msg(keys.encode('utf-8'))
 
     def __client_connection(self, connection, address):
         """
