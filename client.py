@@ -59,7 +59,7 @@ class RemoteDesktop:
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
         while self.active:
-            frame = None
+            frame = self._get_frame()
             _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
             video = pickle.dumps(frame, 0)
             length = len(video)
@@ -100,11 +100,10 @@ class Control(RemoteDesktop):
 
     def _get_frame(self):
         screen = ImageGrab.grab()
-        # screen = pyautogui.screenshot()
         frame = np.array(screen)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
 
 if __name__ == '__main__':
-    remote = Control(IP ADDRESS, 443)
+    remote = Control('IP ADDRESS', 443)
     remote.connect()
