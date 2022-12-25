@@ -68,6 +68,7 @@ class StreamingServer:
         try:
             conn.send(msg)
         except Exception as e:
+            print(e)
             pass
         
 
