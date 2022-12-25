@@ -69,7 +69,6 @@ class StreamingServer:
             conn.send(msg)
         except Exception as e:
             print(e)
-            pass
         
 
     def showcords(self, event,x,y,flags,conn) -> None:
