@@ -88,7 +88,6 @@ class StreamingServer:
         
     def __client_connection(self, connection, address):
         global WIDTH, HEIGHT
-        cv2.setNumThreads(2)
         try:
             display = connection.recv(1028).decode().split(":")
             WIDTH, HEIGHT = int(display[0]), int(display[1])
