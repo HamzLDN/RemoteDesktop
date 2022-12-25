@@ -1,14 +1,19 @@
 import cv2
 from PIL import ImageGrab
 import numpy as np
-import pyautogui
+from pyautogui import doubleClick, press
 import socket
 import pickle
 import struct
-import threading
+from threading import Thread, Lock
 from pynput.mouse import Button, Controller
-import base64
-import zlib
+import win32api
+
+WIDTH = win32api.GetSystemMetrics(0)
+HEIGHT = win32api.GetSystemMetrics(1)
+
+metrics = [str(WIDTH), str(HEIGHT)]
+dislpay = ":".join(metrics).encode('utf-8')
 class RemoteDesktop:
     def __init__(self, host, port):
         self.ip = host
@@ -21,6 +26,7 @@ class RemoteDesktop:
     
     def recv_msg(self):
         msg = self.socket.recv(1028).decode()
+        print(msg)
         return msg
     
     def __servermouse(self):
@@ -29,8 +35,7 @@ class RemoteDesktop:
                 data = self.recv_msg().split(":")
                 if data[0] == "mouse":
                     mouse = Controller()
-                    datatype, xAxis, yAxis, event = data[0], int(data[1]), int(data[2]), int(data[3])
-                    print(datatype, xAxis, yAxis, event)
+                    xAxis, yAxis, event = int(data[1]), int(data[2]), int(data[3]) 
                     if xAxis < 0 and yAxis < 0:
                         pass
                     else:
@@ -44,13 +49,14 @@ class RemoteDesktop:
                         if event == 5:
                             mouse.release(Button.right)
                         if event == 7:
-                            pyautogui.doubleClick(xAxis,yAxis)
+                            doubleClick(xAxis,yAxis)
                 if data[0] == "keyboard":
                     keys = int(data[1])
+                    print(keys)
                     if keys == 13:
-                        pyautogui.press("enter")
+                        press("enter")
                     else:
-                        pyautogui.press(chr(keys))
+                        press(chr(keys))
                         print("keyboard", chr(keys))
                 else:
                     pass
@@ -58,6 +64,8 @@ class RemoteDesktop:
                 pass
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
+        self.socket.send(dislpay)
+        print("Reconnecting!")
         while self.active:
             frame = self._get_frame()
             _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
@@ -71,8 +79,6 @@ class RemoteDesktop:
                 self.active = False
             except BrokenPipeError:
                 self.active = False
-            
-
         cv2.destroyAllWindows()
 
     def connect(self):
@@ -80,9 +86,9 @@ class RemoteDesktop:
             print("Client already up and running")
         else:
             self.active = True
-            client_thread = threading.Thread(target=self.__client_streaming)
+            client_thread = Thread(target=self.__client_streaming)
             client_thread.start()
-            controller = threading.Thread(target=self.__servermouse)
+            controller = Thread(target=self.__servermouse)
             controller.start()
 
             
@@ -105,5 +111,5 @@ class Control(RemoteDesktop):
         return frame
 
 if __name__ == '__main__':
-    remote = Control('IP ADDRESS', 443)
+    remote = Control('localhost', 443)
     remote.connect()
