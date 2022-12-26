@@ -4,9 +4,13 @@ import socket
 import pickle
 import struct
 import threading
-import win32api
-import win32con
 import math
+global _win32
+try:
+    import win32api
+    _win32 = True
+except:
+    _win32 = False
 SWIDTH = 960
 SHEIGHT = 540
 class StreamingServer:
@@ -68,15 +72,16 @@ class StreamingServer:
         try:
             conn.send(msg)
         except Exception as e:
-            print(e)
+            pass
         
 
     def showcords(self, event,x,y,flags,conn) -> None:
-        win32api.SetCursor(win32api.LoadCursor(0, win32con.IDC_HAND))
+        if _win32:
+            win32api.SetCursor(win32api.LoadCursor(0, 32649))
         x = str(math.ceil(x*(WIDTH / SWIDTH)))
         y = str(math.ceil(y*(WIDTH / SWIDTH)))
         event = str(event)
-        data = ["mouse", x, y, event]
+        data = ["mouse", x, y, event, flags]
         keys = ":".join(data)
         self.send_msg(keys.encode('utf-8'), conn)
 
@@ -88,6 +93,7 @@ class StreamingServer:
         
     def __client_connection(self, connection, address):
         global WIDTH, HEIGHT
+
         try:
             display = connection.recv(1028).decode().split(":")
             WIDTH, HEIGHT = int(display[0]), int(display[1])
@@ -95,8 +101,7 @@ class StreamingServer:
             pass
         payload_size = struct.calcsize('>L')
         data = b""
-        k = last_key = -1
-        while self.active:
+        for i in range(100000000):
             break_loop = False
             while len(data) < payload_size:
                 received = connection.recv(4096)
@@ -121,12 +126,9 @@ class StreamingServer:
             frame = self.sortframe(frame_data)
             cv2.imshow(str(address), frame)
             cv2.setMouseCallback(str(address), self.showcords, param=connection)
-            k = cv2.waitKey(33) & 0xFF
-            if k != 255:
-                keyboard = "keyboard:" + str(k)
-                self.send_msg(keyboard.encode('utf-8'), connection)
-                continue
-            
+            keyboard = "keyboard:" + str(cv2.waitKey(100) & 0xFF)
+            self.send_msg(keyboard.encode('utf-8'), connection)
+                
 if __name__ == '__main__':
     server = StreamingServer('0.0.0.0', 443)
     server.start_server()
