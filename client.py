@@ -5,6 +5,7 @@ from pyautogui import doubleClick, press
 import socket
 import pickle
 import struct
+import pyautogui
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api
@@ -26,7 +27,6 @@ class RemoteDesktop:
     
     def recv_msg(self):
         msg = self.socket.recv(1028).decode()
-        print(msg)
         return msg
     
     def __servermouse(self):
@@ -35,7 +35,8 @@ class RemoteDesktop:
                 data = self.recv_msg().split(":")
                 if data[0] == "mouse":
                     mouse = Controller()
-                    xAxis, yAxis, event = int(data[1]), int(data[2]), int(data[3]) 
+                    xAxis, yAxis, event, flags = int(data[1]), int(data[2]), int(data[3]), int(data[4])
+                    print(xAxis, yAxis)
                     if xAxis < 0 and yAxis < 0:
                         pass
                     else:
@@ -50,14 +51,19 @@ class RemoteDesktop:
                             mouse.release(Button.right)
                         if event == 7:
                             doubleClick(xAxis,yAxis)
+                        if event == 10:
+                            if flags > 0:
+                                mouse.scroll(0, -1)
+                            else:
+                                mouse.scroll(0, 1)
                 if data[0] == "keyboard":
                     keys = int(data[1])
-                    print(keys)
                     if keys == 13:
                         press("enter")
+                    elif keys == 255:
+                        pass
                     else:
                         press(chr(keys))
-                        print("keyboard", chr(keys))
                 else:
                     pass
             except:
@@ -105,7 +111,7 @@ class Control(RemoteDesktop):
         super(Control, self).__init__(host, port)
 
     def _get_frame(self):
-        screen = ImageGrab.grab()
+        screen = pyautogui.grab()
         frame = np.array(screen)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
