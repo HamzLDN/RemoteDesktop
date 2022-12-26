@@ -10,5 +10,4 @@ git clone https://github.com/HamzLDN/RemoteDesktop.git
 cd RemoteDesktop
 pip install -r requirements.txt
 ```
-  
 ![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
