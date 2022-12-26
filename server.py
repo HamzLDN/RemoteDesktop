@@ -101,7 +101,7 @@ class StreamingServer:
             pass
         payload_size = struct.calcsize('>L')
         data = b""
-        for i in range(100000000):
+        while self.active:
             break_loop = False
             while len(data) < payload_size:
                 received = connection.recv(4096)
