@@ -4,10 +4,11 @@ from pyautogui import doubleClick, press, grab
 import socket
 import pickle
 import struct
+import pyautogui
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api
-
+import zlib
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 
@@ -19,7 +20,8 @@ class RemoteDesktop:
         self.port = port
         self.active = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+        self.LeftMouseup = False
+        self.RightMouseup = False
     def _get_frame(self):
         return None
     
@@ -34,22 +36,29 @@ class RemoteDesktop:
                 if data[0] == "mouse":
                     mouse = Controller()
                     xAxis, yAxis, event, flags = int(data[1]), int(data[2]), int(data[3]), int(data[4])
-                    print(xAxis, yAxis)
+                    # print(xAxis, yAxis)
                     if xAxis < 0 and yAxis < 0:
                         pass
                     else:
                         mouse.position = (xAxis,yAxis)
-                        if event == 1:
-                            mouse.press(Button.left)
-                        if event == 4:
-                            mouse.release(Button.left)
-                        if event == 2:
-                            mouse.press(Button.right)
-                        if event == 5:
-                            mouse.release(Button.right)
-                        if event == 7:
+                        print(event)
+                        if flags == 1:
+                            if self.LeftMouseup:
+                                pass
+                            else:
+                                mouse.press(Button.left)
+                                self.LeftMouseup = True
+                        elif flags == 0:
+                            if self.LeftMouseup:
+                                mouse.release(Button.left)
+                                self.LeftMouseup = False
+                            else:
+                                pass
+                        elif event == 2:
+                            mouse.click(Button.right)
+                        elif event == 7:
                             doubleClick(xAxis,yAxis)
-                        if event == 10:
+                        elif event == 10:
                             if flags > 0:
                                 mouse.scroll(0, -1)
                             else:
@@ -58,8 +67,6 @@ class RemoteDesktop:
                     keys = int(data[1])
                     if keys == 13:
                         press("enter")
-                    elif keys == 255:
-                        pass
                     else:
                         press(chr(keys))
                 else:
@@ -73,7 +80,7 @@ class RemoteDesktop:
         while self.active:
             frame = self._get_frame()
             _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
-            video = pickle.dumps(frame, 0)
+            video = zlib.compress(pickle.dumps(frame, 0))
             length = len(video)
             try:
                 self.socket.send(struct.pack('>L', length) + video)
