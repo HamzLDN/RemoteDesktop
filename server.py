@@ -5,7 +5,7 @@ import pickle
 import struct
 import threading
 import math
-import zlib
+import lzma
 global _win32
 try:
     import win32api
@@ -88,7 +88,7 @@ class StreamingServer:
         self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
-            frame = pickle.loads(zlib.decompress(frame_data), fix_imports=True, encoding="bytes")
+            frame = pickle.loads(lzma.decompress(frame_data), fix_imports=True, encoding="bytes")
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
             frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
             return frame
