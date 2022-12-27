@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from pyautogui import doubleClick, press
+from pyautogui import doubleClick, press, grab
 import socket
 import pickle
 import struct
