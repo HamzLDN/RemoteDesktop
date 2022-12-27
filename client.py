@@ -1,5 +1,4 @@
 import cv2
-from PIL import ImageGrab
 import numpy as np
 from pyautogui import doubleClick, press
 import socket
