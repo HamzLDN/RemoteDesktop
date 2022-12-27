@@ -8,7 +8,7 @@ import pyautogui
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api
-import zlib
+import lzma
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 
@@ -80,7 +80,7 @@ class RemoteDesktop:
         while self.active:
             frame = self._get_frame()
             _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
-            video = zlib.compress(pickle.dumps(frame, 0))
+            video = lzma.compress(pickle.dumps(frame, 0))
             length = len(video)
             try:
                 self.socket.send(struct.pack('>L', length) + video)
