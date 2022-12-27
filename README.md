@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
 
 # Updates
-I have now added compression using the zlib library and i have improved the refresh rate and it runs smoother.
+I have now added compression using the lzma library and i have improved the refresh rate and it runs smoother.
 I have also improved the mouse response time.
 
 # Next update
