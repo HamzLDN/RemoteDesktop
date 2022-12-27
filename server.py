@@ -81,6 +81,7 @@ class StreamingServer:
         x = str(math.ceil(x*(WIDTH / SWIDTH)))
         y = str(math.ceil(y*(WIDTH / SWIDTH)))
         event = str(event)
+        flags = str(flags)
         data = ["mouse", x, y, event, flags]
         keys = ":".join(data)
         self.send_msg(keys.encode('utf-8'), conn)
