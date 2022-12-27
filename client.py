@@ -4,7 +4,6 @@ from pyautogui import doubleClick, press
 import socket
 import pickle
 import struct
-import pyautogui
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api
@@ -110,7 +109,7 @@ class Control(RemoteDesktop):
         super(Control, self).__init__(host, port)
 
     def _get_frame(self):
-        screen = pyautogui.grab()
+        screen = grab()
         frame = np.array(screen)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
