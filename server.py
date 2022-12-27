@@ -5,6 +5,7 @@ import pickle
 import struct
 import threading
 import math
+import zlib
 global _win32
 try:
     import win32api
@@ -87,7 +88,7 @@ class StreamingServer:
         self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
-            frame = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+            frame = pickle.loads(zlib.decompress(frame_data), fix_imports=True, encoding="bytes")
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
             frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
             return frame
@@ -127,8 +128,10 @@ class StreamingServer:
             frame = self.sortframe(frame_data)
             cv2.imshow(str(address), frame)
             cv2.setMouseCallback(str(address), self.showcords, param=connection)
-            keyboard = "keyboard:" + str(cv2.waitKey(100) & 0xFF)
-            self.send_msg(keyboard.encode('utf-8'), connection)
+            k = cv2.waitKey(1)
+            if k != -1:
+                keyboard = "keyboard:" + str(k)
+                self.send_msg(keyboard.encode('utf-8'), connection)
                 
 if __name__ == '__main__':
     server = StreamingServer('0.0.0.0', 443)
