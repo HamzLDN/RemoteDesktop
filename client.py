@@ -1,16 +1,39 @@
 import cv2
 import numpy as np
-from pyautogui import doubleClick, press, grab
+import pyautogui
 import socket
 import pickle
 import struct
-import pyautogui
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
-import win32api
+import win32api, win32ui, win32gui, win32con
+import lz4.frame
 import lzma
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
+global fps
+fps = 30
+def screenshot():
+    hwnd = None
+    wDC = win32gui.GetWindowDC(hwnd)
+    dcObj=win32ui.CreateDCFromHandle(wDC)
+    cDC=dcObj.CreateCompatibleDC()
+    dataBitMap = win32ui.CreateBitmap()
+    dataBitMap.CreateCompatibleBitmap(dcObj, WIDTH, HEIGHT)
+    cDC.SelectObject(dataBitMap)
+    cDC.BitBlt((0,0),(WIDTH, HEIGHT) , dcObj, (0,0), win32con.SRCCOPY)
+    
+    signedarray = dataBitMap.GetBitmapBits(True)
+    img = np.frombuffer(signedarray, dtype='uint8')
+    img.shape = (HEIGHT, WIDTH, 4)
+    
+    # Free Resources
+    dcObj.DeleteDC()
+    cDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, wDC)
+    win32gui.DeleteObject(dataBitMap.GetHandle())
+    
+    return np.array(img)
 
 metrics = [str(WIDTH), str(HEIGHT)]
 dislpay = ":".join(metrics).encode('utf-8')
@@ -25,6 +48,10 @@ class RemoteDesktop:
     def _get_frame(self):
         return None
     
+    def get_fps(self):
+        fps = self.socket.recv(1028).decode()
+        if fps.split(":")[0] == "fps":
+            return fps
     def recv_msg(self):
         msg = self.socket.recv(1028).decode()
         return msg
@@ -41,7 +68,6 @@ class RemoteDesktop:
                         pass
                     else:
                         mouse.position = (xAxis,yAxis)
-                        print(event)
                         if flags == 1:
                             if self.LeftMouseup:
                                 pass
@@ -57,7 +83,7 @@ class RemoteDesktop:
                         elif event == 2:
                             mouse.click(Button.right)
                         elif event == 7:
-                            doubleClick(xAxis,yAxis)
+                            pyautogui.doubleClick(xAxis,yAxis)
                         elif event == 10:
                             if flags > 0:
                                 mouse.scroll(0, -1)
@@ -66,11 +92,12 @@ class RemoteDesktop:
                 if data[0] == "keyboard":
                     keys = int(data[1])
                     if keys == 13:
-                        press("enter")
+                        pyautogui.press("enter")
                     else:
-                        press(chr(keys))
-                else:
-                    pass
+                        pyautogui.press(chr(keys))
+                if data[0] == "fps":
+                    global fps
+                    fps = int(data[1])
             except:
                 pass
     def __client_streaming(self):
@@ -79,11 +106,13 @@ class RemoteDesktop:
         print("Reconnecting!")
         while self.active:
             frame = self._get_frame()
-            _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
-            video = lzma.compress(pickle.dumps(frame, 0))
+            _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(fps)])
+            data = pickle.dumps(frame, 0)
+            video = lz4.frame.compress(data)
             length = len(video)
+            # print("Original: {} Compressed: {}".format(len(data), length))
             try:
-                self.socket.send(struct.pack('>L', length) + video)
+                self.socket.sendall(struct.pack('>L', length) + video)
             except ConnectionResetError:
                 self.active = False
             except ConnectionAbortedError:
@@ -116,10 +145,8 @@ class Control(RemoteDesktop):
         super(Control, self).__init__(host, port)
 
     def _get_frame(self):
-        screen = grab()
-        frame = np.array(screen)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return frame
+        screen = screenshot()
+        return screen
 
 if __name__ == '__main__':
     remote = Control('localhost', 443)
