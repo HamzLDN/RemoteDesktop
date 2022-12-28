@@ -4,16 +4,24 @@ import socket
 import pickle
 import struct
 import threading
-import math
+import lz4.frame
 import lzma
+import time
 global _win32
 try:
     import win32api
     _win32 = True
 except:
     _win32 = False
+
+# Change the width and height of window
+# Large window
 SWIDTH = 960
 SHEIGHT = 540
+
+# Small window
+#SWIDTH = 1440
+#SHEIGHT = 810
 class StreamingServer:
     def __init__(self, host, port, slots=8):
         self.ip = host
@@ -70,17 +78,14 @@ class StreamingServer:
             
             
     def send_msg(self, msg, conn):
-        try:
-            conn.send(msg)
-        except Exception as e:
-            pass
+        conn.send(msg)
         
 
     def showcords(self, event,x,y,flags,conn) -> None:
         if _win32:
             win32api.SetCursor(win32api.LoadCursor(0, 32649))
-        x = str(math.ceil(x*(WIDTH / SWIDTH)))
-        y = str(math.ceil(y*(WIDTH / SWIDTH)))
+        x = str(int(x*(WIDTH / SWIDTH)))
+        y = str(int(y*(WIDTH / SWIDTH)))
         event = str(event)
         flags = str(flags)
         data = ["mouse", x, y, event, flags]
@@ -88,7 +93,7 @@ class StreamingServer:
         self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
-            frame = pickle.loads(lzma.decompress(frame_data), fix_imports=True, encoding="bytes")
+            frame = pickle.loads(lz4.frame.decompress(frame_data), fix_imports=True, encoding="bytes")
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
             frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
             return frame
@@ -103,6 +108,8 @@ class StreamingServer:
             pass
         payload_size = struct.calcsize('>L')
         data = b""
+        loop_time = time.time()
+        send = 0
         while self.active:
             break_loop = False
             while len(data) < payload_size:
@@ -120,7 +127,6 @@ class StreamingServer:
             data = data[payload_size:]
 
             msg_size = struct.unpack(">L", packed_msg_size)[0]
-
             while len(data) < msg_size:
                 data += connection.recv(4096)
             frame_data = data[:msg_size]
@@ -132,7 +138,14 @@ class StreamingServer:
             if k != -1:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
-                
+            fps = str(int(1 / (time.time()-loop_time)))
+            fps = "fps:" + fps
+            if send == 15:
+                print(fps)
+                self.send_msg(fps.encode('utf-8'), connection)
+                send = 0
+            loop_time = time.time()
+            send += 1
 if __name__ == '__main__':
     server = StreamingServer('0.0.0.0', 443)
     server.start_server()
