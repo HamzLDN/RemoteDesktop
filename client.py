@@ -79,7 +79,7 @@ class RemoteDesktop:
         print("Reconnecting!")
         while self.active:
             frame = self._get_frame()
-            _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
             video = lzma.compress(pickle.dumps(frame, 0))
             length = len(video)
             try:
