@@ -8,7 +8,6 @@ from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api, win32ui, win32gui, win32con
 import lz4.frame
-import lzma
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 global fps
