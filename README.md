@@ -3,6 +3,10 @@ Remote desktop application still in development
 
 Fully inspired by the project: https://github.com/NeuralNine/vidstream
 I just wanted to improve on it and add more features. I am still not done.
+
+# Note
+Its recommended to run the server on windows as linux is a bit slow. I will fix this soon.
+
 ## Setup
 ```
 git clone https://github.com/HamzLDN/RemoteDesktop.git
