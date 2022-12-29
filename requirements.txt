@@ -1,7 +1,6 @@
 opencv-python==4.6.0.66
 pynput==1.6.8
-pywin32==304
 PyAutoGUI==0.9.53
 numpy==1.23.0
-lzma
 lz4
+pywin32==304
