@@ -8,6 +8,7 @@ from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api, win32ui, win32gui, win32con
 import lz4.frame
+import lzma
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
 global fps
@@ -105,7 +106,8 @@ class RemoteDesktop:
         print("Reconnecting!")
         while self.active:
             frame = self._get_frame()
-            _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(fps)])
+            print(fps)
+            _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(fps)])
             data = pickle.dumps(frame, 0)
             video = lz4.frame.compress(data)
             length = len(video)
