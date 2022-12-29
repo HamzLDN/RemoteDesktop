@@ -5,7 +5,6 @@ import pickle
 import struct
 import threading
 import lz4.frame
-import lzma
 import time
 global _win32
 try:
@@ -18,7 +17,6 @@ except:
 # Large window
 SWIDTH = 960
 SHEIGHT = 540
-
 # Small window
 #SWIDTH = 1440
 #SHEIGHT = 810
@@ -97,6 +95,9 @@ class StreamingServer:
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
             frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
             return frame
+
+    def back(self, *args):
+        print(args)
         
     def __client_connection(self, connection, address):
         global WIDTH, HEIGHT
@@ -110,6 +111,8 @@ class StreamingServer:
         data = b""
         loop_time = time.time()
         send = 0
+        cv2.namedWindow(str(address))
+        cv2.createTrackbar("Quality", str(address), 15, 100, lambda x: x)
         while self.active:
             break_loop = False
             while len(data) < payload_size:
@@ -139,10 +142,10 @@ class StreamingServer:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
             fps = str(int(1 / (time.time()-loop_time)))
-            fps = "fps:" + fps
+            quality = cv2.getTrackbarPos("Quality", str(address))
+            fps = "fps:" + str(quality)
             if send == 15:
-                print(fps)
-                self.send_msg(fps.encode('utf-8'), connection)
+                self.send_msg(str(fps).encode('utf-8'), connection)
                 send = 0
             loop_time = time.time()
             send += 1
