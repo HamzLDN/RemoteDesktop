@@ -6,31 +6,15 @@ import pickle
 import struct
 from threading import Thread, Lock
 from pynput.mouse import Button, Controller
-import win32api, win32ui, win32gui, win32con
-import lz4.frame
-WIDTH = win32api.GetSystemMetrics(0)
-HEIGHT = win32api.GetSystemMetrics(1)
+import win32ui, win32gui, win32con
+import lzma
+
 global quality
 quality = 30
-def screenshot():
-    hwnd = None
-    wDC = win32gui.GetWindowDC(hwnd)
-    dcObj=win32ui.CreateDCFromHandle(wDC)
-    cDC=dcObj.CreateCompatibleDC()
-    dataBitMap = win32ui.CreateBitmap()
-    dataBitMap.CreateCompatibleBitmap(dcObj, WIDTH, HEIGHT)
-    cDC.SelectObject(dataBitMap)
-    cDC.BitBlt((0,0),(WIDTH, HEIGHT) , dcObj, (0,0), win32con.SRCCOPY)
-    
-    signedarray = dataBitMap.GetBitmapBits(True)
-    img = np.frombuffer(signedarray, dtype='uint8')
-    img.shape = (HEIGHT, WIDTH, 4)
-    
-    dcObj.DeleteDC()
-    cDC.DeleteDC()
-    win32gui.ReleaseDC(hwnd, wDC)
-    win32gui.DeleteObject(dataBitMap.GetHandle())
-    return np.array(img)
+
+WIDTH = pyautogui.size()[0]
+HEIGHT = pyautogui.size()[1]
+
 
 metrics = [str(WIDTH), str(HEIGHT)]
 dislpay = ":".join(metrics).encode('utf-8')
@@ -43,57 +27,81 @@ class RemoteDesktop:
         self.LeftMouseup = False
         self.RightMouseup = False
         
+        
+    def record(self):
+        hwnd = None
+        wDC = win32gui.GetWindowDC(hwnd)
+        dcObj=win32ui.CreateDCFromHandle(wDC)
+        cDC=dcObj.CreateCompatibleDC()
+        dataBitMap = win32ui.CreateBitmap()
+        dataBitMap.CreateCompatibleBitmap(dcObj, WIDTH, HEIGHT)
+        cDC.SelectObject(dataBitMap)
+        cDC.BitBlt((0,0),(WIDTH, HEIGHT) , dcObj, (0,0), 13369376)
+        
+        signedarray = dataBitMap.GetBitmapBits(True)
+        img = np.frombuffer(signedarray, dtype='uint8')
+        img.shape = (HEIGHT, WIDTH, 4)
+        
+        dcObj.DeleteDC()
+        cDC.DeleteDC()
+        win32gui.ReleaseDC(hwnd, wDC)
+        win32gui.DeleteObject(dataBitMap.GetHandle())
+        return np.array(img)
+
     def _get_frame(self):
         return None
     
     def recv_msg(self):
+        # Receives data from server to control the client
         msg = self.socket.recv(1028).decode()
         return msg
     
     def __servermouse(self):
-        while self.active:
-            try:
-                data = self.recv_msg().split(":")
-                if data[0] == "mouse":
-                    mouse = Controller()
-                    xAxis, yAxis, event, flags = int(data[1]), int(data[2]), int(data[3]), int(data[4])
-                    # print(xAxis, yAxis)
-                    if xAxis < 0 and yAxis < 0:
-                        pass
-                    else:
-                        mouse.position = (xAxis,yAxis)
-                        if flags == 1:
-                            if self.LeftMouseup:
-                                pass
-                            else:
-                                mouse.press(Button.left)
-                                self.LeftMouseup = True
-                        elif flags == 0:
-                            if self.LeftMouseup:
-                                mouse.release(Button.left)
-                                self.LeftMouseup = False
-                            else:
-                                pass
-                        elif event == 2:
-                            mouse.click(Button.right)
-                        elif event == 7:
-                            pyautogui.doubleClick(xAxis,yAxis)
-                        elif event == 10:
-                            if flags > 0:
-                                mouse.scroll(0, -1)
-                            else:
-                                mouse.scroll(0, 1)
-                if data[0] == "keyboard":
-                    keys = int(data[1])
-                    if keys == 13:
-                        pyautogui.press("enter")
-                    else:
-                        pyautogui.press(chr(keys))
-                if data[0] == "quality":
-                    global quality
-                    quality = int(data[1])
-            except:
-                pass
+        ''' Leave debug as false if you want to control the machine '''
+        debug = False
+        if not debug:
+            while self.active:
+                try:
+                    data = self.recv_msg().split(":")
+                    if data[0] == "mouse":
+                        mouse = Controller()
+                        xAxis, yAxis, event, flags = int(data[1]), int(data[2]), int(data[3]), int(data[4])
+                        if xAxis < 0 and yAxis < 0:
+                            pass
+                        else:
+                            mouse.position = (xAxis,yAxis)
+                            if flags == 1:
+                                if self.LeftMouseup:
+                                    pass
+                                else:
+                                    mouse.press(Button.left)
+                                    self.LeftMouseup = True
+                            elif flags == 0:
+                                if self.LeftMouseup:
+                                    mouse.release(Button.left)
+                                    self.LeftMouseup = False
+                                else:
+                                    pass
+                            elif event == 2:
+                                mouse.click(Button.right)
+                            elif event == 7:
+                                pyautogui.doubleClick(xAxis,yAxis)
+                            elif event == 10:
+                                if flags > 0:
+                                    mouse.scroll(0, -1)
+                                else:
+                                    mouse.scroll(0, 1)
+                    if data[0] == "keyboard":
+                        keys = int(data[1])
+                        if keys == 13:
+                            pyautogui.press("enter")
+                        else:
+                            pyautogui.press(chr(keys))
+                    if data[0] == "quality":
+                        global quality
+                        quality = int(data[1])
+                except:
+                    pass
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
         self.socket.send(dislpay)
@@ -101,9 +109,9 @@ class RemoteDesktop:
             frame = self._get_frame()
             _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
             data = pickle.dumps(frame, 0)
-            video = lz4.frame.compress(data)
+            video = lzma.compress(data)
             length = len(video)
-            # print("Original: {} Compressed: {}".format(len(data), length))
+            print("Original: {} Compressed: {}".format(len(data), length))
             try:
                 self.socket.sendall(struct.pack('>L', length) + video)
             except ConnectionResetError:
@@ -138,8 +146,10 @@ class Control(RemoteDesktop):
         super(Control, self).__init__(host, port)
 
     def _get_frame(self):
-        return screenshot()
+        return RemoteDesktop.record(self)
 
 if __name__ == '__main__':
+    
+    # ENTER YOUR IP ADDRESS HERE
     remote = Control('localhost', 443)
     remote.connect()
