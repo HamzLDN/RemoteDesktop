@@ -14,20 +14,20 @@ except:
     _win32 = False
 
 # Change the width and height of window
-# Large window
+# Small window
 SWIDTH = 960
 SHEIGHT = 540
-# Small window
-#SWIDTH = 1440
-#SHEIGHT = 810
-class StreamingServer:
-    def __init__(self, host, port, slots=8):
+
+# Large window
+#SWIDTH = 1920
+#SHEIGHT = 1080
+
+class RemoteDesktop:
+    def __init__(self, host, port):
         self.ip = host
         self.port = port
         self.active = False
         self.reset = False
-        self.__slots = slots
-        self.__used_slots = 0
         self.__block = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind_socket()
@@ -48,16 +48,8 @@ class StreamingServer:
         while self.active:
             self.__block.acquire()
             connection, address = self.socket.accept()
-            if self.__used_slots >= self.__slots:
-                print("Connection refused! No free slots!")
-                connection.close()
-                self.__block.release()
-                continue
-            else:
-                self.__used_slots += 1
             self.__block.release()
-            thread = threading.Thread(target=self.__client_connection, args=(connection, address,))
-            thread.start()
+            self.__client_connection(connection, address,)
             print("Connection started!")
 
     
@@ -79,16 +71,18 @@ class StreamingServer:
         conn.send(msg)
         
 
-    def showcords(self, event,x,y,flags,conn) -> None:
-        if _win32:
-            win32api.SetCursor(win32api.LoadCursor(0, 32649))
-        x = str(int(x*(WIDTH / SWIDTH)))
-        y = str(int(y*(WIDTH / SWIDTH)))
-        event = str(event)
-        flags = str(flags)
-        data = ["mouse", x, y, event, flags]
-        keys = ":".join(data)
-        self.send_msg(keys.encode('utf-8'), conn)
+    def showcords(self, event,x,y,flags,param) -> None:
+        conn, userinput = param
+        if userinput == 1:
+            if _win32:
+                win32api.SetCursor(win32api.LoadCursor(0, 32649))
+            x = str(int(x*(WIDTH / SWIDTH)))
+            y = str(int(y*(WIDTH / SWIDTH)))
+            event = str(event)
+            flags = str(flags)
+            data = ["mouse", x, y, event, flags]
+            keys = ":".join(data)
+            self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
             frame = pickle.loads(lz4.frame.decompress(frame_data), fix_imports=True, encoding="bytes")
@@ -96,9 +90,13 @@ class StreamingServer:
             frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
             return frame
 
-    def back(self, *args):
-        print(args)
-        
+    def fps(self, fps):
+        if int(fps) < 10:
+            return (fps, (0, 0, 0))
+        elif int(fps) < 30:
+            return (fps, (235, 186, 73))
+        else:
+            return (fps, (0, 255, 0))
     def __client_connection(self, connection, address):
         global WIDTH, HEIGHT
 
@@ -111,15 +109,16 @@ class StreamingServer:
         data = b""
         loop_time = time.time()
         send = 0
-        cv2.namedWindow(str(address))
+        cv2.namedWindow(str(address), cv2.WINDOW_KEEPRATIO)
+        cv2.resizeWindow(str(address), (SWIDTH, SHEIGHT))
         cv2.createTrackbar("Quality", str(address), 15, 100, lambda x: x)
+        cv2.createTrackbar("Control", str(address), 0, 1, lambda x: x)
         while self.active:
             break_loop = False
             while len(data) < payload_size:
                 received = connection.recv(4096)
                 if received == b'':
                     connection.close()
-                    self.__used_slots -= 1
                     break_loop = True
                     break
                 data += received
@@ -128,27 +127,30 @@ class StreamingServer:
                 break
             packed_msg_size = data[:payload_size]
             data = data[payload_size:]
-
             msg_size = struct.unpack(">L", packed_msg_size)[0]
             while len(data) < msg_size:
                 data += connection.recv(4096)
             frame_data = data[:msg_size]
             data = data[msg_size:]
             frame = self.sortframe(frame_data)
+            fps = self.fps(str(int(1 / (time.time()-loop_time))))
+            cv2.putText(frame, fps[0], (5, 30), cv2.FONT_HERSHEY_COMPLEX, 1, fps[1], 1)
+            userinput = cv2.getTrackbarPos("Control", str(address))
+            if userinput == 0:
+                cv2.putText(frame, "Toggle Control to 1 to control client", (140,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
             cv2.imshow(str(address), frame)
-            cv2.setMouseCallback(str(address), self.showcords, param=connection)
+            cv2.setMouseCallback(str(address), self.showcords, param=(connection, userinput))
             k = cv2.waitKey(1)
-            if k != -1:
+            if k != -1 and userinput == 1:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
-            fps = str(int(1 / (time.time()-loop_time)))
             quality = cv2.getTrackbarPos("Quality", str(address))
-            fps = "fps:" + str(quality)
+            quality = "quality:" + str(quality)
             if send == 15:
-                self.send_msg(str(fps).encode('utf-8'), connection)
+                self.send_msg(str(quality).encode('utf-8'), connection)
                 send = 0
             loop_time = time.time()
             send += 1
 if __name__ == '__main__':
-    server = StreamingServer('0.0.0.0', 443)
+    server = RemoteDesktop('0.0.0.0', 443)
     server.start_server()
