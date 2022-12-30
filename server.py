@@ -4,7 +4,7 @@ import socket
 import pickle
 import struct
 import threading
-import lz4.frame
+import lzma
 import time
 global _win32
 try:
@@ -31,6 +31,7 @@ class RemoteDesktop:
         self.__block = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind_socket()
+        #self.fernet = Fernet(key)
         
 
     def bind_socket(self):
@@ -76,8 +77,8 @@ class RemoteDesktop:
         if userinput == 1:
             if _win32:
                 win32api.SetCursor(win32api.LoadCursor(0, 32649))
-            x = str(int(x*(WIDTH / SWIDTH)))
-            y = str(int(y*(WIDTH / SWIDTH)))
+            x = str(x)
+            y = str(y)
             event = str(event)
             flags = str(flags)
             data = ["mouse", x, y, event, flags]
@@ -85,16 +86,17 @@ class RemoteDesktop:
             self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
-            frame = pickle.loads(lz4.frame.decompress(frame_data), fix_imports=True, encoding="bytes")
-            frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-            frame = cv2.resize(frame, (SWIDTH, SHEIGHT))
-            return frame
+        data = lzma.decompress(frame_data)
+        frame = pickle.loads(data, fix_imports=True, encoding="bytes")
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        frame = cv2.resize(frame, (WIDTH, HEIGHT))
+        return frame
 
     def fps(self, fps):
         if int(fps) < 10:
-            return (fps, (0, 0, 0))
+            return (fps, (0, 0, 255))
         elif int(fps) < 30:
-            return (fps, (235, 186, 73))
+            return (fps, (2, 186, 252))
         else:
             return (fps, (0, 255, 0))
     def __client_connection(self, connection, address):
@@ -133,20 +135,20 @@ class RemoteDesktop:
             frame_data = data[:msg_size]
             data = data[msg_size:]
             frame = self.sortframe(frame_data)
-            fps = self.fps(str(int(1 / (time.time()-loop_time))))
-            cv2.putText(frame, fps[0], (5, 30), cv2.FONT_HERSHEY_COMPLEX, 1, fps[1], 1)
             userinput = cv2.getTrackbarPos("Control", str(address))
             if userinput == 0:
-                cv2.putText(frame, "Toggle Control to 1 to control client", (140,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
-            cv2.imshow(str(address), frame)
+                cv2.putText(frame, "Toggle Control to 1 to control client", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
             cv2.setMouseCallback(str(address), self.showcords, param=(connection, userinput))
+            fps = self.fps(str(int(1 / (time.time()-loop_time))))
+            cv2.putText(frame, fps[0], (5, 30), cv2.FONT_HERSHEY_COMPLEX, 1, fps[1], 2)
+            cv2.imshow(str(address), frame)
             k = cv2.waitKey(1)
             if k != -1 and userinput == 1:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
             quality = cv2.getTrackbarPos("Quality", str(address))
             quality = "quality:" + str(quality)
-            if send == 15:
+            if send == 50:
                 self.send_msg(str(quality).encode('utf-8'), connection)
                 send = 0
             loop_time = time.time()
