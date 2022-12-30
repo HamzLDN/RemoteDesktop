@@ -8,11 +8,10 @@ from threading import Thread, Lock
 from pynput.mouse import Button, Controller
 import win32api, win32ui, win32gui, win32con
 import lz4.frame
-import lzma
 WIDTH = win32api.GetSystemMetrics(0)
 HEIGHT = win32api.GetSystemMetrics(1)
-global fps
-fps = 30
+global quality
+quality = 30
 def screenshot():
     hwnd = None
     wDC = win32gui.GetWindowDC(hwnd)
@@ -27,12 +26,10 @@ def screenshot():
     img = np.frombuffer(signedarray, dtype='uint8')
     img.shape = (HEIGHT, WIDTH, 4)
     
-    # Free Resources
     dcObj.DeleteDC()
     cDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, wDC)
     win32gui.DeleteObject(dataBitMap.GetHandle())
-    
     return np.array(img)
 
 metrics = [str(WIDTH), str(HEIGHT)]
@@ -45,13 +42,10 @@ class RemoteDesktop:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.LeftMouseup = False
         self.RightMouseup = False
+        
     def _get_frame(self):
         return None
     
-    def get_fps(self):
-        fps = self.socket.recv(1028).decode()
-        if fps.split(":")[0] == "fps":
-            return fps
     def recv_msg(self):
         msg = self.socket.recv(1028).decode()
         return msg
@@ -95,19 +89,17 @@ class RemoteDesktop:
                         pyautogui.press("enter")
                     else:
                         pyautogui.press(chr(keys))
-                if data[0] == "fps":
-                    global fps
-                    fps = int(data[1])
+                if data[0] == "quality":
+                    global quality
+                    quality = int(data[1])
             except:
                 pass
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
         self.socket.send(dislpay)
-        print("Reconnecting!")
         while self.active:
             frame = self._get_frame()
-            print(fps)
-            _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), int(fps)])
+            _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
             data = pickle.dumps(frame, 0)
             video = lz4.frame.compress(data)
             length = len(video)
@@ -146,8 +138,7 @@ class Control(RemoteDesktop):
         super(Control, self).__init__(host, port)
 
     def _get_frame(self):
-        screen = screenshot()
-        return screen
+        return screenshot()
 
 if __name__ == '__main__':
     remote = Control('localhost', 443)
