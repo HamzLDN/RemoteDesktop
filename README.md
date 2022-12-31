@@ -1,4 +1,4 @@
-### RemoteDesktop
+# RemoteDesktop
 Remote desktop application still in development
 
 Fully inspired by the project: https://github.com/NeuralNine/vidstream
@@ -19,7 +19,7 @@ I have now added the feature where you can control the client with a switch.
 ## Next update
 - End to end encryption
 
-# Contact me on discord for any help
+## Contact me on discord for any help
 Hamz#0366
 
 I would appreciate a star :)
