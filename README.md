@@ -15,6 +15,7 @@ pip install -r requirements.txt
 
 ## Updates
 I have now added the feature where you can control the client with a switch.
+Now you can see the clients mouse mouse when they are streaming.
 
 ## Next update
 - End to end encryption
