@@ -89,6 +89,7 @@ class RemoteDesktop:
         data = lzma.decompress(frame_data)
         frame = pickle.loads(data, fix_imports=True, encoding="bytes")
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (WIDTH, HEIGHT))
         return frame
 
@@ -147,7 +148,7 @@ class RemoteDesktop:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
             quality = cv2.getTrackbarPos("Quality", str(address))
-            quality = "quality:" + str(quality)
+            quality = "config:" + str(quality) + ":" + str(userinput)
             if send == 50:
                 self.send_msg(str(quality).encode('utf-8'), connection)
                 send = 0
