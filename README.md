@@ -13,6 +13,8 @@ pip install -r requirements.txt
 
 ![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
 
+## IMPORTANT!
+Please i do not support any type of malicious activities with my code please use it at your own risk.  
 ## Updates
 I have now added the feature where you can control the client with a switch.
 Now you can see the clients mouse mouse when they are streaming.
@@ -24,3 +26,6 @@ Now you can see the clients mouse mouse when they are streaming.
 Hamz#0366
 
 I would appreciate a star :)
+
+I would appreciate a donation
+BTC: 3JdzGoaq8n4j6eFLJa6KcMXCcedqpXQmbC
