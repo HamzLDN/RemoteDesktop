@@ -25,7 +25,5 @@ Now you can see the clients mouse mouse when they are streaming.
 ## Contact me on discord for any help
 Hamz#0366
 
-I would appreciate a star :)
-
 I would appreciate a donation
 BTC: 3JdzGoaq8n4j6eFLJa6KcMXCcedqpXQmbC
