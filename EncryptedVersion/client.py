@@ -142,5 +142,5 @@ class RemoteDesktop:
             print("Client is not active!")
 
 if __name__ == '__main__':
-    remote = RemoteDesktop('51.195.187.145', 443, b'3GkUAE69YzG-jYM0vDGfRsKzosra4JaMtzuC-KGXEDk=')
+    remote = RemoteDesktop('localhost', 443, b'3GkUAE69YzG-jYM0vDGfRsKzosra4JaMtzuC-KGXEDk=')
     remote.connect()
