@@ -20,6 +20,8 @@ The output should be under the dist folder.
 - The command --onefile means it will pack all of the files and put it in the exe
 - The command --noconsole means it would not display the console and it would be running in the background
 
+Once all of that is done. Make sure to run the server first before you run the client :)
+
 ## How it works
 ![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
 
