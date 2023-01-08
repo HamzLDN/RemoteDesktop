@@ -1,6 +1,6 @@
-opencv-python==4.6.0.66
-pynput==1.6.8
-PyAutoGUI==0.9.53
+opencv-python
+pynput
+PyAutoGUI
 cryptography
-pillow==9.3.0
-pywin32==304
+pillow
+pywin32
