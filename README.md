@@ -26,11 +26,11 @@ The output should be under the dist folder.
 ## IMPORTANT!
 Please i do not support any type of malicious activities with my code please use it at your own risk.  
 ## Updates
-I have now added the feature where you can control the client with a switch.
-Now you can see the clients mouse mouse when they are streaming.
+This update i made a new folder for the encrypted socket version under the folder EncryptedVersion.
+However its slightly slow.
 
 ## Next update
-- End to end encryption
+- Increase the performance of the EncryptedVersion of the code.
 
 ## Contact me on discord for any help
 Hamz#0366
