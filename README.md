@@ -2,7 +2,6 @@
 Remote desktop application still in development
 
 Fully inspired by the project: https://github.com/NeuralNine/vidstream
-I just wanted to improve on it and add more features. I am still not done.
 
 ## Setup
 ```
