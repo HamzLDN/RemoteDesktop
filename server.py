@@ -5,6 +5,7 @@ import pickle
 import struct
 import threading
 import lzma
+import zlib
 import time
 global _win32
 try:
@@ -86,7 +87,7 @@ class RemoteDesktop:
             self.send_msg(keys.encode('utf-8'), conn)
 
     def sortframe(self, frame_data):
-        data = lzma.decompress(frame_data)
+        data = zlib.decompress(frame_data, wbits=zlib.MAX_WBITS | 16)
         frame = pickle.loads(data, fix_imports=True, encoding="bytes")
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
