@@ -22,7 +22,7 @@ The output should be under the dist folder.
 Once all of that is done. Make sure to run the server first before you run the client :)
 
 ## How it works
-![](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png  =250x250)
+![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
 
 ## IMPORTANT!
 Please i do not support any type of malicious activities with my code please use it at your own risk.  
