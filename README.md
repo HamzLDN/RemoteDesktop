@@ -6,14 +6,14 @@ Fully inspired by the project: https://github.com/NeuralNine/vidstream
 ## Setup
 - Install git
 [-](https://git-scm.com/download/win)
-
+```
 git clone https://github.com/HamzLDN/RemoteDesktop.git
 cd RemoteDesktop
 pip install -r requirements.txt
 ```
 
 Once that is done you can also use pyinstaller to compile the code to an executable.
-```
+
 pip install pyinstaller
 pyinstaller client.py --onefile --noconsole
 
