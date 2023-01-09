@@ -32,9 +32,10 @@ However its slightly slow.
 
 ## Next update
 - Increase the performance of the EncryptedVersion of the code.
+- Make the client keep listening for a connection and just not make it disconnect.
 
 ## Contact me on discord for any help
 Hamz#0366
 
-I would appreciate a donation
+I would appreciate some support on this project. This is just the start!
 BTC: 3JdzGoaq8n4j6eFLJa6KcMXCcedqpXQmbC
