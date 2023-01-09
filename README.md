@@ -4,7 +4,9 @@ Remote desktop application still in development
 Fully inspired by the project: https://github.com/NeuralNine/vidstream
 
 ## Setup
-```
+- Install git
+[-](https://git-scm.com/download/win)
+
 git clone https://github.com/HamzLDN/RemoteDesktop.git
 cd RemoteDesktop
 pip install -r requirements.txt
@@ -14,7 +16,8 @@ Once that is done you can also use pyinstaller to compile the code to an executa
 ```
 pip install pyinstaller
 pyinstaller client.py --onefile --noconsole
-```
+
+
 The output should be under the dist folder.
 - The command --onefile means it will pack all of the files and put it in the exe
 - The command --noconsole means it would not display the console and it would be running in the background
