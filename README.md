@@ -15,10 +15,10 @@ pip install -r requirements.txt
 ```
 
 Once that is done you can also use pyinstaller to compile the code to an executable.
-
+```
 pip install pyinstaller
 pyinstaller client.py --onefile --noconsole
-
+```
 
 The output should be under the dist folder.
 - The command --onefile means it will pack all of the files and put it in the exe
