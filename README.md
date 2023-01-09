@@ -7,6 +7,7 @@ Fully inspired by the project: https://github.com/NeuralNine/vidstream
 - Make sure to install git here:
 https://git-scm.com/download/win
 - If you dont have python installed make sure to install it here: https://www.python.org/downloads/
+- Make sure when you are installing python u add python.exe to path on the installation process.
 
 ```
 git clone https://github.com/HamzLDN/RemoteDesktop.git
