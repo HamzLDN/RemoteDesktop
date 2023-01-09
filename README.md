@@ -5,7 +5,8 @@ Fully inspired by the project: https://github.com/NeuralNine/vidstream
 
 ## Setup
 - Install git
-[-](https://git-scm.com/download/win)
+https://git-scm.com/download/win
+
 ```
 git clone https://github.com/HamzLDN/RemoteDesktop.git
 cd RemoteDesktop
