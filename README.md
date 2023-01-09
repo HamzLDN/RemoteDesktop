@@ -4,7 +4,7 @@ Remote desktop application still in development
 Fully inspired by the project: https://github.com/NeuralNine/vidstream
 
 ## Setup
-- Install git
+- Make sure to install git here:
 https://git-scm.com/download/win
 
 ```
