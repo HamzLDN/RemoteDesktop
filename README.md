@@ -1,7 +1,7 @@
 # RemoteDesktop
 Remote desktop application still in development
 
-I would appreciate some support on this project to keep me going. This is just the start!
+I would appreciate some support on this project to keep me going. This is just the start :)
 
 ## Setup
 - Make sure to install git here:
