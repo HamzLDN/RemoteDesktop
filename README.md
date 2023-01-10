@@ -1,7 +1,7 @@
 # RemoteDesktop
 Remote desktop application still in development
 
-Fully inspired by the project: https://github.com/NeuralNine/vidstream
+I would appreciate some support on this project to keep me going. This is just the start!
 
 ## Setup
 - Make sure to install git here:
@@ -43,5 +43,4 @@ However its slightly slow.
 ## Contact me on discord for any help
 Hamz#0366
 
-I would appreciate some support on this project. This is just the start!
-BTC: 3JdzGoaq8n4j6eFLJa6KcMXCcedqpXQmbC
+Fully inspired by the project: https://github.com/NeuralNine/vidstream
