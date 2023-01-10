@@ -18,7 +18,7 @@ pip install -r requirements.txt
 Once that is done you can also use pyinstaller to compile the code to an executable.
 ```
 pip install pyinstaller
-pyinstaller client.py --onefile --noconsole
+pyinstaller client.py --onefile --noconsole --icon=NONE
 ```
 
 The output should be under the dist folder.
