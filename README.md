@@ -36,6 +36,22 @@ Please i do not support any type of malicious activities with my code please use
 This update i made a new folder for the encrypted socket version under the folder EncryptedVersion.
 However its slightly slow.
 
+## How to connect to a device outside my network?
+-Using port forwarding, you can direct network traffic from a certain port on your firewall or router to a particular IP address or network device on your home network. This enables you to connect a local network device, such as a computer or server, to the internet.
+
+-Depending on the router or firewall you're using, there may be different steps to enable port forwarding. To enable port forwarding on your router, follow these general instructions:
+
+-1. Connect to your router's web interface: The IP address of your router can be found on its user manual or by typing it into a web browser. Running the command ipconfig on the Windows command prompt or ifconfig on a Linux or Mac computer will reveal the router's IP address.
+Log in to your router: You will need to enter a username and password to log in to your router. If you haven't changed the default login credentials, you can find them in the router's manual or by searching online for the make and model of your router.
+
+-2. Find the port forwarding section: Once you're logged in, look for the port forwarding or virtual server section. This section is usually located in the advanced settings or security section of the router's web interface.
+
+-3. Add a new port forwarding rule: In the port forwarding section, add a new rule by specifying the protocol (TCP or UDP), the port you want to forward, and the local IP address of the device you want to forward traffic to.
+
+-4. Save your changes: Make sure to save your changes before you exit the router's web interface.
+
+-5. Test your port forwarding: You can use online tools such as canyouseeme.org to check if your port is open or not.
+
 ## Next update
 - Increase the performance of the EncryptedVersion of the code.
 - Make the client keep listening for a connection and just not make it disconnect.
