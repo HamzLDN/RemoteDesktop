@@ -1,5 +1,5 @@
 # RemoteDesktop
-Remote desktop application still in development
+Reverse remote desktop application still in development
 
 I would appreciate some support on this project to keep me going. This is just the start :)
 
