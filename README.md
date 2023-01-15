@@ -1,7 +1,7 @@
 # RemoteDesktop
 Reverse remote desktop application still in development
 
-I would appreciate some support on this project to keep me going. This is just the start :)
+I would appreciate a small donation for this project to keep me motivated to do more. This is just the start :)
 
 ## Setup
 - Make sure to install git here:
