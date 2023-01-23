@@ -9,12 +9,9 @@ from pynput.mouse import Button, Controller
 import win32gui
 import lzma
 from io import BytesIO
-from PIL import Image, ImageGrab
+from PIL import Image
 import base64
-from pynput.keyboard import Key, Listener
-import subprocess
 import mss
-import os
 import json
 from screeninfo import get_monitors
 ''' DONT WORRY THIS BASE64 IS A MOUSE IMAGE. YOU CAN DECODE IT AND OBSERVE THE CODE! Double check on this site https://codebeautify.org/base64-to-image-converter'''
