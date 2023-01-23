@@ -1,6 +1,5 @@
 opencv-python
 pynput
 PyAutoGUI
-cryptography
 pillow
-pywin32
+mss
