@@ -3,3 +3,4 @@ pynput
 PyAutoGUI
 pillow
 mss
+screeninfo
