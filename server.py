@@ -6,6 +6,8 @@ import struct
 import threading
 import lzma
 import time
+import os
+import json
 global _win32
 try:
     import win32api
@@ -13,14 +15,10 @@ try:
 except:
     _win32 = False
 
-# Change the width and height of window
-# Small window
+
 SWIDTH = 960
 SHEIGHT = 540
 
-# Large window
-#SWIDTH = 1920
-#SHEIGHT = 1080
 
 class RemoteDesktop:
     def __init__(self, host, port):
@@ -30,12 +28,17 @@ class RemoteDesktop:
         self.reset = False
         self.__block = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.bind_socket()
+        self.socket.bind((self.ip, self.port))
+        self.userinput = 0
+        self.monitor = 0
+        self.width = 0
+        self.height = 0
+        self.display_data = {}
+        self.position = 0
+        
         #self.fernet = Fernet(key)
         
-
-    def bind_socket(self):
-        self.socket.bind((self.ip, self.port))
+        
 
     def start_server(self):
         if self.active:
@@ -44,15 +47,18 @@ class RemoteDesktop:
             self.active = True
             server_thread = threading.Thread(target=self.__server_listening)
             server_thread.start()
+            
+            
+
     def __server_listening(self):
         self.socket.listen()
         while self.active:
             self.__block.acquire()
             connection, address = self.socket.accept()
             self.__block.release()
-            self.__client_connection(connection, address,)
+            t = threading.Thread(target=self.__client_connection, args=(connection, address,))
+            t.start()
             print("Connection started!")
-
     
     def stop_server(self):
         if self.active:
@@ -71,28 +77,46 @@ class RemoteDesktop:
     def send_msg(self, msg, conn):
         conn.send(msg)
         
+        
+    def is_between(self, num, range1, range2):
+        if range1 > range2:
+            range1, range2 = range2, range1
+        return range1 <= num <= range2
+
+    def get_pos(self) -> int:
+        for i in range(self.monitor - 1):
+            self.position += self.display_data[i]['resolution'][0]
+        return self.position
+
 
     def showcords(self, event,x,y,flags,param) -> None:
-        conn, userinput = param
-        if userinput == 1:
+        conn = param
+        if self.is_between(x, self.width-30, self.width-80) and self.is_between(y, 0, 50) and event == 4 and self.userinput==0:
+            self.userinput=1
+        elif self.is_between(x, self.width-30, self.width-80) and self.is_between(y, 0, 50) and event == 4 and self.userinput==1:
+            self.userinput=0
+        if self.userinput == 1:
             if _win32:
                 win32api.SetCursor(win32api.LoadCursor(0, 32649))
-            x = str(x)
-            y = str(y)
+            x = str(x + self.get_pos())
+            y = str(y + int(self.display_data[self.monitor - 1]['position'][1]))
             event = str(event)
             flags = str(flags)
             data = ["mouse", x, y, event, flags]
             keys = ":".join(data)
             self.send_msg(keys.encode('utf-8'), conn)
+            self.position = 0
 
     def sortframe(self, frame_data):
         data = lzma.decompress(frame_data)
         frame = pickle.loads(data, fix_imports=True, encoding="bytes")
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = cv2.resize(frame, (WIDTH, HEIGHT))
+        frame = cv2.resize(frame, (self.width, self.height))
         return frame
 
+
+    
     def fps(self, fps):
         if int(fps) < 10:
             return (fps, (0, 0, 255))
@@ -100,12 +124,14 @@ class RemoteDesktop:
             return (fps, (2, 186, 252))
         else:
             return (fps, (0, 255, 0))
-    def __client_connection(self, connection, address):
-        global WIDTH, HEIGHT
 
+    '''Sorry for the messy function'''
+    def __client_connection(self, connection, address):
         try:
-            display = connection.recv(1028).decode().split(":")
-            WIDTH, HEIGHT = int(display[0]), int(display[1])
+            display = connection.recv(1028).decode()
+            self.display_data = json.loads(display)
+            self.width, self.height = int(self.display_data[0]['size'][0]), int(self.display_data[0]['size'][1])
+            self.monitor = int(self.display_data[0]['len_monitors'])
         except:
             pass
         payload_size = struct.calcsize('>L')
@@ -115,7 +141,7 @@ class RemoteDesktop:
         cv2.namedWindow(str(address), cv2.WINDOW_KEEPRATIO)
         cv2.resizeWindow(str(address), (SWIDTH, SHEIGHT))
         cv2.createTrackbar("Quality", str(address), 15, 100, lambda x: x)
-        cv2.createTrackbar("Control", str(address), 0, 1, lambda x: x)
+        cv2.createTrackbar("Monitor", str(address), 0, self.monitor, lambda y: y)
         while self.active:
             break_loop = False
             while len(data) < payload_size:
@@ -125,7 +151,6 @@ class RemoteDesktop:
                     break_loop = True
                     break
                 data += received
-
             if break_loop:
                 break
             packed_msg_size = data[:payload_size]
@@ -136,24 +161,25 @@ class RemoteDesktop:
             frame_data = data[:msg_size]
             data = data[msg_size:]
             frame = self.sortframe(frame_data)
-            userinput = cv2.getTrackbarPos("Control", str(address))
-            if userinput == 0:
-                cv2.putText(frame, "Toggle Control to 1 to control client", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
-            cv2.setMouseCallback(str(address), self.showcords, param=(connection, userinput))
+            cv2.rectangle(frame, (self.width-30, 0), (self.width-80, 50), (136, 8, 8), 4)
+            if self.userinput == 0:
+                cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
+            cv2.setMouseCallback(str(address), self.showcords, param=(connection))
             fps = self.fps(str(int(1 / (time.time()-loop_time))))
             cv2.putText(frame, fps[0], (5, 30), cv2.FONT_HERSHEY_COMPLEX, 1, fps[1], 2)
             cv2.imshow(str(address), frame)
             k = cv2.waitKey(1)
-            if k != -1 and userinput == 1:
+            quality = cv2.getTrackbarPos("Quality", str(address))
+            self.monitor = cv2.getTrackbarPos("Monitor", str(address)) + 1
+            quality = "config:" + str(quality) + ":" + str(self.userinput) + ":" + str(self.monitor)
+            if k != -1 and self.userinput == 1:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
-            quality = cv2.getTrackbarPos("Quality", str(address))
-            quality = "config:" + str(quality) + ":" + str(userinput)
-            if send == 50:
+            if send == 5:
                 self.send_msg(str(quality).encode('utf-8'), connection)
                 send = 0
-            loop_time = time.time()
-            send += 1
+            send +=1
+
 if __name__ == '__main__':
     server = RemoteDesktop('0.0.0.0', 443)
     server.start_server()
