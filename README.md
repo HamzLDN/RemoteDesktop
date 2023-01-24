@@ -53,8 +53,7 @@ Log in to your router: You will need to enter a username and password to log in 
 -5. Test your port forwarding: You can use online tools such as canyouseeme.org to check if your port is open or not.
 
 ## Next update
-- Increase the performance of the EncryptedVersion of the code.
-- Make the client keep listening for a connection and just not make it disconnect.
+- Add client.py to startup and replicate to a hidden directory
 
 ## Contact me on discord for any help
 Hamz#0366
