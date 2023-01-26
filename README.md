@@ -16,7 +16,8 @@ pip install -r requirements.txt
 ```
 IF YOU ARE ON WINDOWS ALSO INSTALL THIS
 ```pip install pywin32```
-Once that is done you can also use pyinstaller to compile the code to an executable.
+
+-Once that is done you can also use pyinstaller to compile the code to an executable.
 ```
 pip install pyinstaller
 pyinstaller client.py --onefile --noconsole --icon=NONE
