@@ -14,12 +14,14 @@ git clone https://github.com/HamzLDN/RemoteDesktop.git
 cd RemoteDesktop
 pip install -r requirements.txt
 ```
-
+IF YOU ARE ON WINDOWS ALSO INSTALL THIS
+```pip install pywin32```
 Once that is done you can also use pyinstaller to compile the code to an executable.
 ```
 pip install pyinstaller
 pyinstaller client.py --onefile --noconsole --icon=NONE
 ```
+
 
 The output should be under the dist folder.
 - The command --onefile means it will pack all of the files and put it in the exe
