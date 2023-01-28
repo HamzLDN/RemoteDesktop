@@ -34,7 +34,9 @@ Once all of that is done. Make sure to run the server first before you run the c
 ![alt text](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
 
 ## IMPORTANT!
-Please i do not support any type of malicious activities with my code please use it at your own risk.  
+-Please I do not support any type of malicious activities with my code please use it at your own risk. 
+-If your code is running slow but you have fast internet connection. Try using the window in windowed mode since at the moment it is slightly buggy for some users.
+
 ## Updates
 This update i made a new folder for the encrypted socket version under the folder EncryptedVersion.
 However its slightly slow.
