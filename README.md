@@ -5,7 +5,7 @@ I would appreciate a small donation for this project to keep me motivated keep i
 
 ## Setup
 First:
-- Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux), [macOS](https://git-scm.com/download/mac))
+- Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux)
 - If you dont have python installed make sure to install it from [here](https://www.python.org/downloads)
 - On Windows, make sure to add python.exe to your PATH during the installation.
 
@@ -28,9 +28,9 @@ pyinstaller client.py --onefile --noconsole --icon=NONE
 
 The output should be inside of the dist folder.
 - The argument --onefile makes pyinstaller compile everything into a single executable.
-- The argument --noconsole prevents a terminal window from showing up when running it.
+- The argument --noconsole prevents the terminal from displaying itself to the clients computer.
 
-Once all of that is done, make sure to run the server first and only the client :)
+Once all of that is done, make sure to run the server first and then run the client.
 
 ## How it works
 ![diagram](https://github.com/HamzLDN/RemoteDesktop/blob/main/Diagram.png)
