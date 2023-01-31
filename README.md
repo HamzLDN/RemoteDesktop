@@ -1,5 +1,5 @@
 # RemoteDesktop
-Reverse remote desktop application, still in development.
+Reverse remote desktop application which is currently in development.
 
 I would appreciate a small donation for this project to keep me motivated keep it going. This is just the start :)
 
@@ -56,7 +56,7 @@ Log into your router: You will need to enter a username and password. If you hav
 * 5. Test your port forwarding: You can use online tools such as canyouseeme.org to check if your port is open or not.
 
 ## Next update
-- Add client.py to startup and replicate to a hidden directory
+- I will add a feature to add client.py to startup and replicate to a hidden directory.
 
 ## Contact me on discord if you need any help
 Hamz#0366
