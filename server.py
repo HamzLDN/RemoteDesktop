@@ -175,7 +175,7 @@ class RemoteDesktop:
             if k != -1 and self.userinput == 1:
                 keyboard = "keyboard:" + str(k)
                 self.send_msg(keyboard.encode('utf-8'), connection)
-            if send == 5:
+            if send >= 5:
                 self.send_msg(str(quality).encode('utf-8'), connection)
                 send = 0
             send +=1
