@@ -7,7 +7,7 @@ JOIN MY DISCORD FOR THE LATEST UPDATES: https://discord.gg/Fm6ZhrzJsp
 ## Setup
 First:
 - Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux)
-- If you dont have python installed make sure to install it from [here](https://www.python.org/downloads)
+- If you dont have python installed make sure to install it from [here](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)
 - On Windows, make sure to add python.exe to your PATH during the installation.
 
 Then, clone the repository:
