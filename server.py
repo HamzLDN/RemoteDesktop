@@ -40,7 +40,7 @@ class RemoteDesktop:
 
     def start_server(self):
         if self.active:
-            print("server already running")
+            print("[-] server already running")
         else:
             self.active = True
             server_thread = threading.Thread(target=self.__server_listening)
@@ -55,7 +55,7 @@ class RemoteDesktop:
             self.__block.release()
             t = threading.Thread(target=self.__client_connection, args=(connection, address,))
             t.start()
-            print("Connection started!")
+            print("[+] Connection started!")
     
     def stop_server(self):
         if self.active:
@@ -67,7 +67,7 @@ class RemoteDesktop:
             self.socket.close()
             self.__block.release()
         else:
-            print("Server not running!")
+            print("[!] Server not running!")
             
             
             
@@ -207,4 +207,4 @@ class RemoteDesktop:
 if __name__ == '__main__':
     server = RemoteDesktop('0.0.0.0', 443)
     server.start_server()
-    print("Server listening...\n")
+    print("[+] Server Started\n[*] Listening For Incomming Connections...\n")
