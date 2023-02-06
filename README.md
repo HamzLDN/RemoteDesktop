@@ -9,7 +9,7 @@ First:
 - Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux)
 - If you dont have python installed make sure to install it from [here](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)
 - On Windows, make sure to add python.exe to your PATH during the installation.
-
+![diagram](https://linuxhint.com/wp-content/uploads/2022/09/How-to-Add-Python-to-Windows-Path-1.png)
 Then, clone the repository:
 ```
 git clone https://github.com/HamzLDN/RemoteDesktop.git
