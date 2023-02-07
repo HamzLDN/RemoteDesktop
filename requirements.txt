@@ -4,3 +4,4 @@ PyAutoGUI
 pillow
 mss
 screeninfo
+easygui
