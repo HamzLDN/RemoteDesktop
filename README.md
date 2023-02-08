@@ -6,7 +6,7 @@ I would appreciate a small donation for this project to keep me motivated keep i
 JOIN MY DISCORD FOR THE LATEST UPDATES: https://discord.gg/Fm6ZhrzJsp
 ## Setup
 First:
-- Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux)
+- Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux))
 - If you dont have python installed make sure to install it from [here](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)
 - On Windows, make sure to add python.exe to your PATH during the installation.
 ![diagram](https://linuxhint.com/wp-content/uploads/2022/09/How-to-Add-Python-to-Windows-Path-3.png)
