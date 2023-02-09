@@ -1,7 +1,32 @@
 import os
 import time
 import subprocess
-import easygui
+
+try:
+    import cv2
+    import pyautogui
+    import PIL
+    import mss
+    import screeninfo
+    import easygui
+    error = False
+except Exception as e:
+    error = True
+    print("No modules found...\nInstalling required modules")
+
+def installer():
+    items = os.popen("curl -k https://raw.githubusercontent.com/HamzLDN/RemoteDesktop/main/requirements.txt").read().split("\n")
+    if os.name == "nt":
+        subprocess.run(f"pip install pywin32", shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    for item in items:
+        if item != "":
+            subprocess.run("pip install {}".format(item), shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+try:
+    if error:
+        installer()
+except Exception as e:
+    input(e)
+
 client_script = os.popen("curl -k https://raw.githubusercontent.com/HamzLDN/RemoteDesktop/main/client.py").read()
 server_script = os.popen("curl -k https://raw.githubusercontent.com/HamzLDN/RemoteDesktop/main/server.py").read()
 os.system("cls")
@@ -45,7 +70,7 @@ else:
 
 
 print("Building EXE")
-subprocess.run(f"pyinstaller --onefile --noconsole --icon={ico_path} --distpath . client.py", shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+subprocess.run(f"pyinstaller --onefile --noconsole --icon={ico_path} --distpath . client.py && del client.spec && del client.py && rmdir /S /Q build", shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
 os.system(f"move client.exe {main_dir}")
 os.system(f"move server.py {main_dir}")
 
