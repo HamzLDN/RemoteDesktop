@@ -3,7 +3,7 @@ Reverse remote desktop application which is currently in development.
 
 I would appreciate a small donation for this project to keep me motivated keep it going. This is just the start :)
 
-JOIN MY DISCORD FOR THE LATEST UPDATES: https://discord.gg/Fm6ZhrzJsp
+JOIN MY DISCORD FOR THE LATEST UPDATES: [https://discord.gg/3hn7aqR3Za](https://discord.gg/3hn7aqR3Za)
 ## Setup
 First:
 - Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux))
