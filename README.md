@@ -60,6 +60,7 @@ Log into your router: You will need to enter a username and password. If you hav
 - I will add a feature to add client.py to startup and replicate to a hidden directory.
 
 ## Contact me on discord if you need any help
-Hamz#0366
-
+BluePill #7862
+## If you need further help, please join our discord
+https://discord.gg/3hn7aqR3Za
 Inspired by this great project: https://github.com/NeuralNine/vidstream
