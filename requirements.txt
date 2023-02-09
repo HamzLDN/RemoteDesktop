@@ -5,3 +5,4 @@ pillow
 mss
 screeninfo
 easygui
+pyinstaller
