@@ -3,7 +3,7 @@ Reverse remote desktop application which is currently in development.
 
 I would appreciate a small donation for this project to keep me motivated keep it going. This is just the start :)
 
-JOIN MY DISCORD FOR THE LATEST UPDATES: https://discord.gg/Fm6ZhrzJsp
+JOIN MY DISCORD FOR THE LATEST UPDATES: [https://discord.gg/3hn7aqR3Za](https://discord.gg/3hn7aqR3Za)
 ## Setup
 First:
 - Make sure to install git ([Windows](https://git-scm.com/download/win), [Linux](https://git-scm.com/download/linux))
@@ -60,6 +60,8 @@ Log into your router: You will need to enter a username and password. If you hav
 - I will add a feature to add client.py to startup and replicate to a hidden directory.
 
 ## Contact me on discord if you need any help
-Hamz#0366
+BluePill #7862
+## If you need further help, please join our discord
+https://discord.gg/3hn7aqR3Za
 
 Inspired by this great project: https://github.com/NeuralNine/vidstream
