@@ -254,6 +254,7 @@ class RemoteDesktop:
             cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
         cv2.setMouseCallback(str(address), self.showcords, param=(connection))
         cv2.imshow(str(address), frame)
+        
     def __client_connection(self, connection, address):
         self.monitor = self.Getclientdetails(connection, address)
         send = 0
