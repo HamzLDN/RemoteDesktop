@@ -25,7 +25,7 @@ Commands            Description
 """
 
 class RemoteDesktop:
-    def __init__(self, host, port):
+    def __init__(self, host, port, shell_enabled=None):
         self.ip = host
         self.port = port
         self.active = False
@@ -45,6 +45,14 @@ class RemoteDesktop:
         self.connected_port = []
         self.stream = False
         self.killstream = False
+        self.shell_enabled = shell_enabled
+        if type(self.shell_enabled) == bool:
+            pass
+        else:
+            if self.shell_enabled == None:
+                self.shell_enabled = True
+            else:
+                raise TypeError("shell_enabled must be a bool not a " + type(self.shell_enabled).__name__)
 
     def start_server(self):
         if self.active:
@@ -159,35 +167,40 @@ class RemoteDesktop:
 
         
     def menu(self, connection, address):
-        while self.revshell:
-            try:
-                shell = input(str(address[0]) + "> ")
-                if shell == "cls" or shell == "clear":
-                    os.system("cls")
-                elif shell == "":
-                    continue
-                elif shell.startswith("!download"):
-                    self.filename = shell.split(" ")[1]
-                    self.send(b"shell:"+shell.encode('utf-8'), connection)
-                elif shell.startswith("!upload"):
-                    with open(shell.split(" ")[1], "rb") as _file:
-                        self.send(b"shell:" + shell.encode('utf-8')+ b" " + _file.read(), connection)
-                elif shell == "!start_stream":
-                    self.send(b"shell:"+shell.encode('utf-8'), connection)
-                    self.stream = True
-                elif shell == "!stop_stream":
-                    self.send(b"shell:"+shell.encode('utf-8'), connection)
-                    self.stream = False
-                    self.killstream = True
-                elif shell == "!shell":
-                    self.shell(connection)
-                elif shell == "help":
-                    print(menu)
-                else:
-                    print("Invalid command. Type help to view options")
-            except EOFError:
-                print()
-            continue
+        if self.shell_enabled == True:
+            while self.revshell:
+                try:
+                    shell = input(str(address[0]) + "> ")
+                    if shell == "cls" or shell == "clear":
+                        os.system("cls")
+                    elif shell == "":
+                        continue
+                    elif shell.startswith("!download"):
+                        self.filename = shell.split(" ")[1]
+                        self.send(b"shell:"+shell.encode('utf-8'), connection)
+                    elif shell.startswith("!upload"):
+                        with open(shell.split(" ")[1], "rb") as _file:
+                            self.send(b"shell:" + shell.encode('utf-8')+ b" " + _file.read(), connection)
+                    elif shell == "!start_stream":
+                        self.send(b"shell:"+shell.encode('utf-8'), connection)
+                        self.stream = True
+                    elif shell == "!stop_stream":
+                        self.send(b"shell:"+shell.encode('utf-8'), connection)
+                        self.stream = False
+                        self.killstream = True
+                    elif shell == "!shell":
+                        self.shell(connection)
+                    elif shell == "help":
+                        print(menu)
+                    else:
+                        print("Invalid command. Type help to view options")
+                except EOFError:
+                    print()
+                continue
+        else:
+            self.send(b"shell:"+ "!start_stream".encode('utf-8'), connection)
+            self.stream = True
+
 
     def shell(self, connection):
         while True:
@@ -288,4 +301,4 @@ class RemoteDesktop:
                 self.active = False
                 pass
 if __name__ == '__main__':
-    RemoteDesktop('0.0.0.0', 443).start_server()
+    RemoteDesktop('0.0.0.0', 443, shell_enabled=True).start_server()
