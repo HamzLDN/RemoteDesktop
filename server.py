@@ -288,4 +288,4 @@ class RemoteDesktop:
                 self.active = False
                 pass
 if __name__ == '__main__':
-    RemoteDesktop('0.0.0.0', 443).start_server()
+    RemoteDesktop("", 443).start_server()
