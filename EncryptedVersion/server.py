@@ -157,5 +157,5 @@ class RemoteDesktop:
             loop_time = time.time()
             send += 1
 if __name__ == '__main__':
-    server = RemoteDesktop('0.0.0.0', 443, b'3GkUAE69YzG-jYM0vDGfRsKzosra4JaMtzuC-KGXEDk=')
+    server = RemoteDesktop("", 443, b'3GkUAE69YzG-jYM0vDGfRsKzosra4JaMtzuC-KGXEDk=')
     server.start_server()
